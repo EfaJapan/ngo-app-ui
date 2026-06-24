@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海外事業管理システム | NGO Operations v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1117;--surface:#161b27;--surface2:#1e2535;--border:#2a3348;
+  --accent:#4f8ef7;--accent2:#38d9a9;--warn:#f77b4f;--danger:#f74f6a;
+  --text:#e8edf5;--text-muted:#7a8ba8;--text-dim:#4a5568;
+  --laos:#f7c94f;--cambodia:#f74f6a;--vietnam:#4ff7a0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+.logo{padding:18px 20px 12px;border-bottom:1px solid var(--border);}
+.logo-title{font-family:'Playfair Display',serif;font-size:14px;color:var(--accent);line-height:1.35;}
+.logo-sub{font-size:9px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
+.nav{padding:8px 0;flex:1;overflow-y:auto;}
+.nav-section{padding:7px 20px 3px;font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:13px;
+  color:var(--text-muted);transition:all .15s;border-left:2px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);background:rgba(79,142,247,.08);border-left-color:var(--accent);}
+.notif{display:inline-block;background:var(--danger);color:#fff;border-radius:10px;
+  font-size:9px;padding:1px 5px;margin-left:4px;font-family:'DM Mono',monospace;vertical-align:middle;}
+/* year switcher */
+.ysw{padding:10px 14px;border-top:1px solid var(--border);}
+.ysw-lbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.ysw-list{display:flex;flex-direction:column;gap:3px;}
+.ybtn{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-radius:5px;
+  cursor:pointer;font-size:12px;font-family:'DM Mono',monospace;border:1px solid transparent;
+  transition:all .15s;color:var(--text-muted);}
+.ybtn:hover{background:var(--surface2);color:var(--text);}
+.ybtn.active{background:rgba(79,142,247,.12);border-color:rgba(79,142,247,.3);color:var(--accent);font-weight:600;}
+.ybtn-period{font-size:9px;color:var(--text-dim);}
+.ybtn.active .ybtn-period{color:rgba(79,142,247,.6);}
+.ymng-btn{width:100%;margin-top:5px;padding:4px;background:transparent;border:1px dashed var(--border);
+  border-radius:5px;color:var(--text-dim);font-size:10px;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;}
+.ymng-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{padding:12px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:50;}
+.page-title{font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px;}
+.topbar-r{display:flex;gap:10px;align-items:center;}
+.content{padding:22px 26px;flex:1;}
+
+/* ── BUTTONS ── */
+.btn{padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;border:none;transition:all .15s;font-weight:500;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:#3a7de8;}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.btn-edit{background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);color:var(--accent);
+  padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;transition:all .15s;}
+.btn-edit:hover{background:rgba(79,142,247,.25);}
+.btn-del{background:rgba(247,79,106,.08);border:1px solid rgba(247,79,106,.2);color:var(--danger);
+  padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;transition:all .15s;}
+.btn-del:hover{background:rgba(247,79,106,.22);}
+
+/* ── SECTIONS / TABS ── */
+.section{display:none;}.section.active{display:block;}
+.view-tabs{display:flex;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.view-tab{padding:7px 14px;font-size:12px;cursor:pointer;color:var(--text-muted);
+  border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;}
+.view-tab:hover{color:var(--text);}.view-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:16px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-card.blue::before{background:var(--accent);}
+.kpi-card.green::before{background:var(--accent2);}
+.kpi-card.orange::before{background:var(--warn);}
+.kpi-card.red::before{background:var(--danger);}
+.kpi-label{font-size:10px;color:var(--text-muted);margin-bottom:5px;font-family:'DM Mono',monospace;}
+.kpi-value{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.2;}
+.kpi-card.blue .kpi-value{color:var(--accent);}
+.kpi-card.green .kpi-value{color:var(--accent2);}
+.kpi-card.orange .kpi-value{color:var(--warn);}
+.kpi-card.red .kpi-value{color:var(--danger);}
+.kpi-sub{font-size:10px;color:var(--text-muted);margin-top:5px;}
+
+/* ── CARDS ── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.card-header{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:12px;font-weight:500;}
+.card-body{padding:12px 15px;}
+
+/* ── COUNTRY GROUP (Projects) ── */
+.cgroup{margin-bottom:18px;}
+.cgroup:last-child{margin-bottom:0;}
+.cgroup-header{display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;background:var(--surface2);border-radius:7px 7px 0 0;
+  border:1px solid var(--border);border-bottom:none;}
+.cgroup-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;}
+.cgroup-totals{display:flex;gap:18px;}
+.cgt{text-align:right;}
+.cgt-lbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;letter-spacing:.5px;text-transform:uppercase;}
+.cgt-val{font-size:12px;font-family:'DM Mono',monospace;margin-top:2px;font-weight:600;}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.cgroup .table-wrap{border-radius:0 0 7px 7px;}
+.table-scroll{overflow-x:auto;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{text-align:left;padding:8px 11px;font-size:9px;color:var(--text-dim);
+  font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);white-space:nowrap;background:var(--surface);}
+.data-table td{padding:8px 11px;border-bottom:1px solid rgba(42,51,72,.5);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+.data-table tr:last-child td{border-bottom:none;}
+.table-toolbar{padding:10px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.empty-state{text-align:center;padding:28px 20px;color:var(--text-muted);font-size:12px;}
+
+/* ── QUARTER GROUP (Remittance) ── */
+.qgroup{margin-bottom:22px;}
+.qgroup-header{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);
+  border-radius:8px;margin-bottom:10px;}
+.qgroup-title{font-size:14px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;}
+.qgroup-summary{display:flex;gap:20px;}
+.qsum{text-align:right;}
+.qsum-lbl{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;}
+.qsum-val{font-size:13px;font-family:'DM Mono',monospace;margin-top:2px;font-weight:700;}
+.crsub{margin-bottom:10px;}
+.crsub-header{display:flex;align-items:center;justify-content:space-between;
+  padding:6px 12px;background:var(--surface2);border-radius:5px;margin-bottom:4px;}
+.crsub-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;}
+.crsub-totals{display:flex;gap:16px;font-size:11px;font-family:'DM Mono',monospace;}
+.crsub .table-wrap{border-radius:5px;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;
+  font-family:'DM Mono',monospace;font-weight:500;white-space:nowrap;}
+.b-red{background:rgba(247,79,106,.15);color:var(--danger);border:1px solid rgba(247,79,106,.25);}
+.b-green{background:rgba(56,217,169,.12);color:var(--accent2);border:1px solid rgba(56,217,169,.22);}
+.b-blue{background:rgba(79,142,247,.12);color:var(--accent);border:1px solid rgba(79,142,247,.22);}
+.b-gray{background:rgba(122,139,168,.12);color:var(--text-muted);border:1px solid rgba(122,139,168,.22);}
+.b-laos{background:rgba(247,201,79,.12);color:var(--laos);border:1px solid rgba(247,201,79,.22);}
+.b-cambodia{background:rgba(247,79,106,.12);color:var(--cambodia);border:1px solid rgba(247,79,106,.22);}
+.b-vietnam{background:rgba(79,247,160,.12);color:var(--vietnam);border:1px solid rgba(79,247,160,.22);}
+.prio-a{color:var(--danger);font-weight:700;font-family:'DM Mono',monospace;}
+.prio-b{color:var(--warn);font-weight:700;font-family:'DM Mono',monospace;}
+.prio-c{color:var(--text-muted);font-weight:700;font-family:'DM Mono',monospace;}
+.mono{font-family:'DM Mono',monospace;}
+.computed{background:rgba(79,142,247,.08);border-radius:4px;padding:2px 7px;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);}
+.action-btns{display:flex;gap:5px;}
+
+/* ── PROGRESS ── */
+.prog-track{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.cbar{margin-bottom:11px;}.cbar:last-child{margin-bottom:0;}
+.cbar-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.76);
+  z-index:999;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;}
+.modal-wide{width:720px;}
+.modal-header{padding:16px 22px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:14px;font-weight:600;}
+.modal-title-edit{color:var(--accent);}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;}
+.modal-body{padding:16px 22px;}
+.modal-footer{padding:13px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+
+/* ── FORM ── */
+.fg{margin-bottom:13px;}
+.flbl{font-size:10px;color:var(--text-muted);margin-bottom:4px;display:block;
+  font-family:'DM Mono',monospace;letter-spacing:.5px;}
+.finput,.fselect{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:7px 11px;color:var(--text);font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  outline:none;transition:border-color .15s;}
+.finput:focus,.fselect:focus{border-color:var(--accent);}
+.ftextarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:7px 11px;color:var(--text);font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  outline:none;transition:border-color .15s;resize:vertical;min-height:58px;}
+.ftextarea:focus{border-color:var(--accent);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fdivider{border:none;border-top:1px solid var(--border);margin:12px 0;}
+.fsec-lbl{font-size:10px;color:var(--accent);font-family:'DM Mono',monospace;
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:9px;}
+.fhint{background:var(--surface2);border-radius:6px;padding:9px;font-size:11px;color:var(--text-muted);}
+
+/* ── ALERT ITEM ── */
+.alert-item{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;
+  border-radius:7px;margin-bottom:7px;background:rgba(247,79,106,.07);border:1px solid rgba(247,79,106,.18);}
+.alert-item:last-child{margin-bottom:0;}
+.alert-name{font-size:12px;font-weight:500;}
+.alert-meta{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.alert-amount{font-family:'DM Mono',monospace;font-size:12px;color:var(--danger);font-weight:600;}
+
+.url-link{color:var(--accent);font-size:11px;text-decoration:none;}
+.url-link:hover{text-decoration:underline;}
+
+/* ── DATA I/O ── */
+.io-bar{display:flex;align-items:center;gap:10px;}
+.btn-save{background:rgba(56,217,169,.15);border:1px solid rgba(56,217,169,.35);color:var(--accent2);
+  padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-save:hover{background:rgba(56,217,169,.28);}
+.btn-load{background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3);color:var(--accent);
+  padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-load:hover{background:rgba(79,142,247,.25);}
+.io-hint{font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;}
+.io-toast{position:fixed;bottom:60px;right:16px;padding:10px 18px;border-radius:8px;
+  font-size:12px;font-family:'DM Mono',monospace;color:#fff;z-index:9999;
+  opacity:0;transition:opacity .3s;pointer-events:none;}
+.io-toast.show{opacity:1;}
+.io-toast.ok{background:rgba(56,217,169,.92);}
+.io-toast.err{background:rgba(247,79,106,.92);}
+.btn-sp{background:rgba(79,142,247,.18);border:1px solid rgba(79,142,247,.4);color:var(--accent);
+  padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-sp:hover{background:rgba(79,142,247,.32);}
+.btn-sp:disabled{opacity:.5;cursor:not-allowed;}
+.sp-signin{background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);
+  border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:var(--text-muted);}
+
+/* ── GITHUB I/O ── */
+.gh-bar{display:flex;align-items:center;gap:8px;}
+.btn-gh-save{background:rgba(56,217,169,.15);border:1px solid rgba(56,217,169,.35);color:var(--accent2);
+  padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-gh-save:hover{background:rgba(56,217,169,.28);}
+.btn-gh-save:disabled{opacity:.5;cursor:not-allowed;}
+.gh-status{font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;}
+.io-toast{position:fixed;bottom:60px;right:16px;padding:10px 18px;border-radius:8px;
+  font-size:12px;font-family:'DM Mono',monospace;color:#fff;z-index:9999;max-width:400px;
+  opacity:0;transition:opacity .3s;pointer-events:none;}
+.io-toast.show{opacity:1;}
+.io-toast.ok{background:rgba(56,217,169,.92);}
+.io-toast.err{background:rgba(247,79,106,.92);}
+/* PAT設定モーダル */
+.pat-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:none;align-items:center;justify-content:center;}
+.pat-modal.open{display:flex;}
+.pat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:480px;width:90%;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-title">海外事業<br>管理システム</div>
+    <div class="logo-sub">NGO Ops v3.0</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">メイン</div>
+    <div class="nav-item active" onclick="showSection('dashboard')"><span>📊</span> ダッシュボード</div>
+    <div class="nav-section">管理台帳</div>
+    <div class="nav-item" onclick="showSection('projects')"><span>🗂</span> プロジェクト管理<span class="notif" id="proj-notif">0</span></div>
+    <div class="nav-item" onclick="showSection('donors')"><span>💰</span> 助成金・ドナー</div>
+    <div class="nav-item" onclick="showSection('remittance')"><span>✈️</span> 海外送金管理</div>
+    <div class="nav-section">システム</div>
+    <div class="nav-item" onclick="showSection('schema')"><span>📐</span> DB設計・仕様書</div>
+  </div>
+  <div class="ysw">
+    <div class="ysw-lbl">年度切り替え</div>
+    <div class="ysw-list" id="ysw-list"></div>
+    <button class="ymng-btn" onclick="openYearModal()">⚙ 年度を管理</button>
+  </div>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title"><span id="tb-icon">📊</span><span id="tb-title">ダッシュボード</span></div>
+    <div class="topbar-r">
+      <div class="gh-bar">
+        <button class="btn-gh-save" id="btn-gh-save" onclick="ghSave()" title="GitHubに保存">
+          <span id="gh-save-label">☁️ 保存</span>
+        </button>
+        <span class="gh-status" id="gh-status"></span>
+        <button class="btn-ghost btn-sm" onclick="openPatModal()" title="GitHub設定" style="padding:4px 8px;font-size:11px;">⚙</button>
+      </div>
+      </div>
+    </div>>
+  <div class="content">
+
+    <!-- ─── DASHBOARD ─── -->
+    <section class="section active" id="section-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-label">目標調達額合計</div><div class="kpi-value" id="d-target">—</div><div class="kpi-sub" id="d-proj-count"></div></div>
+        <div class="kpi-card green"><div class="kpi-label">確定資金総額</div><div class="kpi-value" id="d-conf">—</div><div class="kpi-sub">採択・確定済み</div></div>
+        <div class="kpi-card red"><div class="kpi-label">不足総額</div><div class="kpi-value" id="d-sh">—</div><div class="kpi-sub" id="d-sh-sub"></div></div>
+        <div class="kpi-card orange"><div class="kpi-label">平均送金実施率</div><div class="kpi-value" id="d-remit-rate">—</div><div class="kpi-sub">実績あり回の平均</div></div>
+      </div>
+      <div class="dash-grid">
+        <div class="card"><div class="card-header"><div class="card-title">🚨 資金不足プロジェクト</div><span class="badge b-red" id="d-sh-cnt">0件</span></div><div class="card-body" id="d-sh-list"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">💰 ドナー申請状況</div></div><div class="card-body" id="d-donor-sum"></div></div>
+      </div>
+      <div class="dash-grid">
+        <div class="card"><div class="card-header"><div class="card-title">🌏 国別 資金充足率</div></div><div class="card-body" id="d-country-bars"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">✈️ 四半期別 送金実施率</div></div><div class="card-body" id="d-remit-bars"></div></div>
+      </div>
+    </section>
+
+    <!-- ─── PROJECTS ─── -->
+    <section class="section" id="section-projects">
+      <div class="view-tabs">
+        <div class="view-tab active" onclick="filterProj('all',this)">全体</div>
+        <div class="view-tab" onclick="filterProj('ラオス',this)">ラオス</div>
+        <div class="view-tab" onclick="filterProj('カンボジア',this)">カンボジア</div>
+        <div class="view-tab" onclick="filterProj('ベトナム',this)">ベトナム</div>
+        <div class="view-tab" onclick="filterProj('shortage',this)">🚨 資金不足</div>
+      </div>
+      <div id="proj-container"></div>
+    </section>
+
+    <!-- ─── DONORS ─── -->
+    <section class="section" id="section-donors">
+      <div class="view-tabs">
+        <div class="view-tab active" onclick="filterDonor('all',this)">全体</div>
+        <div class="view-tab" onclick="filterDonor('申請中',this)">申請中</div>
+        <div class="view-tab" onclick="filterDonor('採択',this)">採択済</div>
+        <div class="view-tab" onclick="filterDonor('不採択',this)">不採択</div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div style="font-size:12px;color:var(--text-muted)">ドナー <span class="badge b-gray" id="donor-count">0件</span></div>
+          <button class="btn btn-primary btn-sm" onclick="openDonorAdd()">＋ ドナー追加</button>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr>
+              <th>ドナー名</th><th>対象プロジェクト</th><th>優先度</th>
+              <th>公募期間</th><th>決定時期</th>
+              <th>申請額</th><th>採択額</th><th>採択率</th><th>結果</th>
+              <th>申請日</th><th>結果通知日</th><th>入金確認日</th><th>入金予定</th>
+              <th>URL</th><th>備考</th><th>操作</th>
+            </tr></thead>
+            <tbody id="donor-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── REMITTANCE ─── -->
+    <section class="section" id="section-remittance">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn btn-primary btn-sm" onclick="openRemitAdd()">＋ 送金記録追加</button>
+      </div>
+      <div id="remit-container"></div>
+    </section>
+
+    <!-- ─── SCHEMA ─── -->
+    <section class="section" id="section-schema">
+      <div style="max-width:820px">
+        <div style="margin-bottom:20px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)">🏗 リレーション設計図</div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);line-height:2.6">
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:5px 12px;color:var(--text)">ドナー台帳</span>
+            <span style="color:var(--accent);margin:0 10px">── N:1 ──▶</span>
+            <span style="background:var(--surface);border:1px solid var(--accent);border-radius:5px;padding:5px 12px;color:var(--accent)">プロジェクト台帳</span>
+            <span style="color:var(--accent);margin:0 10px">◀── 1:N ──</span>
+            <span style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:5px 12px;color:var(--text)">送金台帳</span>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:8px">▸ 送金台帳 → 国・年度はプロジェクトからロールアップ取得 ▸ 不足額 = 目標調達額合計 − 確定資金額 ▸ 送金は四半期×国で集計</div>
+          </div>
+        </div>
+        <div style="margin-bottom:20px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:9px">① プロジェクト・管理費管理台帳</div>
+          <div class="table-wrap"><div class="table-scroll"><table class="data-table">
+            <thead><tr><th>フィールド</th><th>型</th><th>属性</th><th>説明</th></tr></thead>
+            <tbody>
+              <tr><td class="mono" style="color:var(--accent2)">project_id</td><td class="mono" style="color:var(--warn)">UUID</td><td><span class="badge b-blue" style="font-size:9px">PK</span></td><td>主キー（自動）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">name</td><td class="mono" style="color:var(--warn)">TEXT</td><td><span class="badge b-green" style="font-size:9px" style="background:rgba(56,217,169,.12);color:var(--accent2);border:1px solid rgba(56,217,169,.22)">必須</span></td><td>プロジェクト・管理費名</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">country</td><td class="mono" style="color:var(--warn)">ENUM</td><td>必須</td><td>ラオス / カンボジア / ベトナム（拡張可）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">fiscal_year</td><td class="mono" style="color:var(--warn)">INTEGER</td><td>必須</td><td>年度（2025〜2031）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">target_amount</td><td class="mono" style="color:var(--warn)">BIGINT</td><td>必須</td><td>目標調達額合計（円）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">confirmed_funds</td><td class="mono" style="color:var(--warn)">BIGINT</td><td>—</td><td>確定資金額（円）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">shortage <span style="font-size:9px;color:var(--accent)">[AUTO]</span></td><td class="mono" style="color:var(--warn)">BIGINT</td><td>—</td><td>target_amount − confirmed_funds</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">fund_status <span style="font-size:9px;color:var(--accent)">[AUTO]</span></td><td class="mono" style="color:var(--warn)">ENUM</td><td>—</td><td>shortage＞0→資金不足 / else→安定</td></tr>
+            </tbody>
+          </table></div></div>
+        </div>
+        <div style="margin-bottom:20px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:9px">② 助成金・ドナー管理台帳</div>
+          <div class="table-wrap"><div class="table-scroll"><table class="data-table">
+            <thead><tr><th>フィールド</th><th>型</th><th>説明</th></tr></thead>
+            <tbody>
+              <tr><td class="mono" style="color:var(--accent2)">donor_id</td><td class="mono" style="color:var(--warn)">UUID</td><td>主キー</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">donor_name</td><td class="mono" style="color:var(--warn)">TEXT</td><td>ドナー・助成機関名</td></tr>
+              <tr><td class="mono" style="color:var(--laos)">project_id → FK</td><td class="mono" style="color:var(--warn)">RELATION</td><td>対象プロジェクト</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">priority</td><td class="mono" style="color:var(--warn)">ENUM</td><td>A / B / C</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">recruit_period</td><td class="mono" style="color:var(--warn)">TEXT</td><td>公募期間</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">decision_timing</td><td class="mono" style="color:var(--warn)">TEXT</td><td>決定時期</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">applied_amount</td><td class="mono" style="color:var(--warn)">BIGINT</td><td>申請額（円）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">adopted_amount</td><td class="mono" style="color:var(--warn)">BIGINT</td><td>採択額（円）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">adoption_rate <span style="font-size:9px;color:var(--accent)">[AUTO]</span></td><td class="mono" style="color:var(--warn)">DECIMAL</td><td>adopted/applied×100（%）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">result</td><td class="mono" style="color:var(--warn)">ENUM</td><td>申請中 / 採択 / 不採択</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">apply_date</td><td class="mono" style="color:var(--warn)">DATE</td><td>申請した日付</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">result_date</td><td class="mono" style="color:var(--warn)">DATE</td><td>結果通知日付</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">payment_confirm_date</td><td class="mono" style="color:var(--warn)">DATE</td><td>入金確認日</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">expected_payment</td><td class="mono" style="color:var(--warn)">YEARMONTH</td><td>入金予定時期</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">url</td><td class="mono" style="color:var(--warn)">TEXT</td><td>助成申請情報URL</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">notes</td><td class="mono" style="color:var(--warn)">TEXT</td><td>備考（自由記入）</td></tr>
+            </tbody>
+          </table></div></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:9px">③ 海外送金管理台帳（四半期×国別集計）</div>
+          <div class="table-wrap"><div class="table-scroll"><table class="data-table">
+            <thead><tr><th>フィールド</th><th>型</th><th>説明</th></tr></thead>
+            <tbody>
+              <tr><td class="mono" style="color:var(--accent2)">remit_id</td><td class="mono" style="color:var(--warn)">UUID</td><td>主キー</td></tr>
+              <tr><td class="mono" style="color:var(--laos)">project_id → FK</td><td class="mono" style="color:var(--warn)">RELATION</td><td>対象プロジェクト</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">country <span style="font-size:9px;color:var(--accent)">[ROLLUP]</span></td><td class="mono" style="color:var(--warn)">TEXT</td><td>プロジェクトから自動取得</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">fiscal_year <span style="font-size:9px;color:var(--accent)">[ROLLUP]</span></td><td class="mono" style="color:var(--warn)">INTEGER</td><td>プロジェクトから自動取得</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">quarter</td><td class="mono" style="color:var(--warn)">ENUM</td><td>Q1(4-6月)/Q2(7-9月)/Q3(10-12月)/Q4(1-3月)</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">planned_amount</td><td class="mono" style="color:var(--warn)">BIGINT</td><td>計画送金額（円）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">actual_amount</td><td class="mono" style="color:var(--warn)">BIGINT</td><td>実績送金額（円）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">remit_date</td><td class="mono" style="color:var(--warn)">DATE</td><td>送金日</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">execution_rate <span style="font-size:9px;color:var(--accent)">[AUTO]</span></td><td class="mono" style="color:var(--warn)">DECIMAL</td><td>actual/planned×100（%）</td></tr>
+              <tr><td class="mono" style="color:var(--accent2)">notes</td><td class="mono" style="color:var(--warn)">TEXT</td><td>備考</td></tr>
+            </tbody>
+          </table></div></div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Year Manage -->
+<div class="modal-overlay" id="year-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📅 年度管理</div><button class="modal-close" onclick="CM('year-modal')">✕</button></div>
+    <div class="modal-body">
+      <div id="year-modal-list" style="margin-bottom:16px"></div>
+      <hr class="fdivider">
+      <div class="fsec-lbl">＋ 新しい年度を追加</div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">年度 *</label><input class="finput" id="fy-year" type="number" placeholder="例：2026" min="2020" max="2031"></div>
+        <div class="fg"><label class="flbl">年度名（任意）</label><input class="finput" id="fy-label" placeholder="例：第2期"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">開始月</label><select class="fselect" id="fy-start"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4" selected>4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
+        <div class="fg"><label class="flbl">終了月</label><select class="fselect" id="fy-end"><option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="addFY()">この年度を追加</button>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="CM('year-modal')">閉じる</button></div>
+  </div>
+</div>
+
+<!-- Year Edit -->
+<div class="modal-overlay" id="year-edit-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title modal-title-edit">✏️ 年度を編集</div><button class="modal-close" onclick="CM('year-edit-modal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="eye-id">
+      <div class="frow">
+        <div class="fg"><label class="flbl">年度 *</label><input class="finput" id="eye-year" type="number" min="2020" max="2031"></div>
+        <div class="fg"><label class="flbl">年度名（任意）</label><input class="finput" id="eye-label"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">開始月</label><select class="fselect" id="eye-start"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
+        <div class="fg"><label class="flbl">終了月</label><select class="fselect" id="eye-end"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="CM('year-edit-modal');openYearModal()">戻る</button>
+      <button class="btn btn-primary" onclick="saveFY()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Add/Edit -->
+<div class="modal-overlay" id="proj-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="proj-modal-title">🗂 プロジェクト・管理費追加</div><button class="modal-close" onclick="CM('proj-modal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="pm-id">
+      <div class="fg"><label class="flbl">プロジェクト・管理費名 *</label><input class="finput" id="pm-name" placeholder="例：ラオス農村保健事業"></div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">対象国 *</label>
+          <select class="fselect" id="pm-country"><option value="">選択</option><option value="ラオス">ラオス</option><option value="カンボジア">カンボジア</option><option value="ベトナム">ベトナム</option></select>
+        </div>
+        <div class="fg"><label class="flbl">年度 *</label><select class="fselect" id="pm-year"></select></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">目標調達額合計（円）*</label><input class="finput" id="pm-target" type="number" placeholder="例：20000000"></div>
+        <div class="fg"><label class="flbl">ベース確定資金額（円）※ドナー採択分は自動加算</label><input class="finput" id="pm-conf" type="number" placeholder="例：12000000"></div>
+      </div>
+      <div class="fhint">💡 不足額（目標調達額合計 − 確定資金額）と資金ステータスは自動計算されます</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="CM('proj-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveProject()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Donor Add/Edit -->
+<div class="modal-overlay" id="donor-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header"><div class="modal-title" id="donor-modal-title">💰 ドナー・助成金追加</div><button class="modal-close" onclick="CM('donor-modal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="dm-id">
+      <div class="frow">
+        <div class="fg"><label class="flbl">ドナー名 *</label><input class="finput" id="dm-name" placeholder="例：JICA草の根技術協力"></div>
+        <div class="fg"><label class="flbl">対象プロジェクト *</label><select class="fselect" id="dm-proj"></select></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">優先度</label><select class="fselect" id="dm-priority"><option value="A">A（最重要）</option><option value="B">B（重要）</option><option value="C">C（通常）</option></select></div>
+        <div class="fg"><label class="flbl">結果</label><select class="fselect" id="dm-result"><option value="申請中">申請中</option><option value="採択">採択</option><option value="不採択">不採択</option></select></div>
+      </div>
+      <hr class="fdivider"><div class="fsec-lbl">募集・決定情報</div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">公募期間</label><input class="finput" id="dm-recruit" placeholder="例：2025/04/01〜2025/05/31"></div>
+        <div class="fg"><label class="flbl">決定時期</label><input class="finput" id="dm-decision" placeholder="例：2025年8月予定"></div>
+      </div>
+      <div class="fg"><label class="flbl">助成申請情報URL</label><input class="finput" id="dm-url" type="url" placeholder="https://..."></div>
+      <hr class="fdivider"><div class="fsec-lbl">金額情報（円入力）</div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">申請額（円）</label><input class="finput" id="dm-applied" type="number" placeholder="例：5000000"></div>
+        <div class="fg"><label class="flbl">採択額（円）</label><input class="finput" id="dm-adopted" type="number" placeholder="未決定は空欄"></div>
+      </div>
+      <hr class="fdivider"><div class="fsec-lbl">日程情報</div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">申請した日付</label><input class="finput" id="dm-apply-date" type="date"></div>
+        <div class="fg"><label class="flbl">結果通知日付</label><input class="finput" id="dm-result-date" type="date"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">入金予定時期</label><input class="finput" id="dm-payment" type="month"></div>
+        <div class="fg"><label class="flbl">入金確認日</label><input class="finput" id="dm-pay-confirm" type="date"></div>
+      </div>
+      <hr class="fdivider">
+      <div class="fg"><label class="flbl">備考</label><textarea class="ftextarea" id="dm-notes" placeholder="自由記入欄"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="CM('donor-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveDonor()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Remittance Add/Edit -->
+<div class="modal-overlay" id="remit-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="remit-modal-title">✈️ 送金記録追加</div><button class="modal-close" onclick="CM('remit-modal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="rm-id">
+      <div class="frow">
+        <div class="fg"><label class="flbl">プロジェクト *</label><select class="fselect" id="rm-proj"></select></div>
+        <div class="fg"><label class="flbl">四半期 *</label><select class="fselect" id="rm-quarter"><option value="Q1">Q1（4〜6月）</option><option value="Q2">Q2（7〜9月）</option><option value="Q3">Q3（10〜12月）</option><option value="Q4">Q4（1〜3月）</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">計画送金額（円）</label><input class="finput" id="rm-planned" type="number" placeholder="例：3000000"></div>
+        <div class="fg"><label class="flbl">実績送金額（円）</label><input class="finput" id="rm-actual" type="number" placeholder="未実施は空欄"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">送金日</label><input class="finput" id="rm-date" type="date"></div>
+        <div class="fg"><label class="flbl">備考</label><input class="finput" id="rm-notes" placeholder="例：為替差益あり"></div>
+      </div>
+      <div class="fhint">💡 国・年度・実施率はプロジェクト情報から自動取得されます</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="CM('remit-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveRemit()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+let fiscalYears = [{ id:'fy2025', year:2025, label:'', startMonth:4, endMonth:3 }];
+let activeYear = 2025;
+
+let projects = [
+  {id:'p1', name:'ラオス農村保健事業',    country:'ラオス',    year:2025, target:20000000, confirmed:12000000},
+  {id:'p2', name:'ラオス事務局管理費',    country:'ラオス',    year:2025, target:3000000,  confirmed:1800000},
+  {id:'p3', name:'カンボジア教育支援',    country:'カンボジア', year:2025, target:24000000, confirmed:16500000},
+  {id:'p4', name:'カンボジア管理費',      country:'カンボジア', year:2025, target:2000000,  confirmed:1200000},
+  {id:'p5', name:'ベトナム水衛生改善',    country:'ベトナム',  year:2025, target:28000000, confirmed:23000000},
+];
+
+let donors = [
+  {id:'d1', name:'JICA草の根技術協力',    projId:'p1', priority:'A', recruitPeriod:'2025/04/01〜2025/05/31', decisionTiming:'2025年9月予定',  applied:5000000,  adopted:0,        result:'申請中', applyDate:'2025-05-20', resultDate:'',           payConfirmDate:'',           payment:'2025-09', url:'https://www.jica.go.jp/', notes:''},
+  {id:'d2', name:'外務省NGO連携無償',     projId:'p1', priority:'A', recruitPeriod:'2025/03/01〜2025/04/15', decisionTiming:'2025年5月',      applied:8000000,  adopted:8000000,  result:'採択',   applyDate:'2025-04-10', resultDate:'2025-05-15', payConfirmDate:'2025-06-01', payment:'2025-06', url:'', notes:'継続案件'},
+  {id:'d3', name:'笹川平和財団',          projId:'p1', priority:'B', recruitPeriod:'2025/01/10〜2025/02/28', decisionTiming:'2025年4月',      applied:3000000,  adopted:0,        result:'不採択', applyDate:'2025-02-25', resultDate:'2025-04-10', payConfirmDate:'',           payment:'',        url:'', notes:''},
+  {id:'d4', name:'ユニセフ日本委員会',    projId:'p3', priority:'A', recruitPeriod:'2025/02/01〜2025/03/31', decisionTiming:'2025年6月',      applied:10000000, adopted:10000000, result:'採択',   applyDate:'2025-03-28', resultDate:'2025-06-05', payConfirmDate:'2025-07-01', payment:'2025-07', url:'https://www.unicef.or.jp/', notes:''},
+  {id:'d5', name:'トヨタ財団',            projId:'p3', priority:'B', recruitPeriod:'2025/04/01〜2025/06/30', decisionTiming:'2025年10月',     applied:5000000,  adopted:4000000,  result:'採択',   applyDate:'2025-06-25', resultDate:'2025-10-01', payConfirmDate:'',           payment:'2025-11', url:'', notes:'減額採択'},
+  {id:'d6', name:'住友化学',              projId:'p5', priority:'A', recruitPeriod:'2025/03/15〜2025/04/30', decisionTiming:'2025年7月',      applied:15000000, adopted:15000000, result:'採択',   applyDate:'2025-04-28', resultDate:'2025-07-15', payConfirmDate:'2025-08-01', payment:'2025-08', url:'', notes:''},
+  {id:'d7', name:'コカ・コーラ財団',      projId:'p5', priority:'B', recruitPeriod:'2025/05/01〜2025/07/31', decisionTiming:'2025年11月予定', applied:4000000,  adopted:0,        result:'申請中', applyDate:'2025-07-20', resultDate:'',           payConfirmDate:'',           payment:'2025-12', url:'https://www.coca-cola.co.jp/', notes:''},
+];
+
+let remittances = [
+  {id:'r1',  projId:'p1', quarter:'Q1', planned:3000000, actual:3000000, date:'2025-05-10', notes:''},
+  {id:'r2',  projId:'p1', quarter:'Q2', planned:3000000, actual:2600000, date:'2025-08-15', notes:'為替調整'},
+  {id:'r3',  projId:'p1', quarter:'Q3', planned:3000000, actual:0,       date:'',           notes:''},
+  {id:'r4',  projId:'p1', quarter:'Q4', planned:3000000, actual:0,       date:'',           notes:''},
+  {id:'r5',  projId:'p3', quarter:'Q1', planned:4000000, actual:4000000, date:'2025-05-20', notes:''},
+  {id:'r6',  projId:'p3', quarter:'Q2', planned:4000000, actual:3900000, date:'2025-08-18', notes:''},
+  {id:'r7',  projId:'p3', quarter:'Q3', planned:4000000, actual:0,       date:'',           notes:''},
+  {id:'r8',  projId:'p3', quarter:'Q4', planned:4000000, actual:0,       date:'',           notes:''},
+  {id:'r9',  projId:'p5', quarter:'Q1', planned:7000000, actual:7000000, date:'2025-04-28', notes:''},
+  {id:'r10', projId:'p5', quarter:'Q2', planned:7000000, actual:6800000, date:'2025-08-10', notes:'レート変動'},
+  {id:'r11', projId:'p5', quarter:'Q3', planned:7000000, actual:0,       date:'',           notes:''},
+  {id:'r12', projId:'p5', quarter:'Q4', planned:7000000, actual:0,       date:'',           notes:''},
+];
+
+// ═══════════════════════════════════════════
+// CONSTANTS & HELPERS
+// ═══════════════════════════════════════════
+const COUNTRIES = ['ラオス','カンボジア','ベトナム'];
+const QUARTERS  = ['Q1','Q2','Q3','Q4'];
+const Q_LABELS  = {Q1:'Q1（4〜6月）', Q2:'Q2（7〜9月）', Q3:'Q3（10〜12月）', Q4:'Q4（1〜3月）'};
+
+const fmtYen  = v => (v && v !== 0) ? v.toLocaleString('ja-JP') + '円' : '—';
+const fmtYenS = v => {
+  if (!v || v === 0) return '—';
+  if (v >= 10000000) return (v/10000000).toFixed(1) + '千万円';
+  if (v >= 10000)    return Math.round(v/10000) + '万円';
+  return v.toLocaleString() + '円';
+};
+// 採択済みドナーの合計採択額を返す
+const donorAdopted = p => donors
+  .filter(d => d.projId === p.id && d.result === '採択' && d.adopted > 0)
+  .reduce((s, d) => s + d.adopted, 0);
+
+// 確定資金合計 = ベース確定資金額 + 採択済みドナー採択額合計
+const confirmedTotal = p => (p.confirmed||0) + donorAdopted(p);
+
+const shortage   = p => (p.target||0) - confirmedTotal(p);
+const execRate   = r => (r.planned > 0 && r.actual > 0) ? Math.round(r.actual/r.planned*100) : null;
+const adoptRate  = d => (d.applied > 0 && d.adopted > 0) ? Math.round(d.adopted/d.applied*100) : null;
+const getProjById = id => projects.find(p => p.id === id);
+const activeProjs = () => projects.filter(p => p.year === activeYear);
+const activeRemits = () => { const ids = activeProjs().map(p=>p.id); return remittances.filter(r=>ids.includes(r.projId)); };
+const activeDonors = () => { const ids = activeProjs().map(p=>p.id); return donors.filter(d=>ids.includes(d.projId)); };
+const cDotColor = c => c==='ラオス'?'var(--laos)':c==='カンボジア'?'var(--cambodia)':c==='ベトナム'?'var(--vietnam)':'var(--text-muted)';
+const cBadge    = c => {
+  const m = {ラオス:'b-laos', カンボジア:'b-cambodia', ベトナム:'b-vietnam'};
+  return `<span class="badge ${m[c]||'b-gray'}">${c}</span>`;
+};
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard() {
+  const ps = activeProjs();
+  const tgt  = ps.reduce((s,p) => s+(p.target||0), 0);
+  const conf = ps.reduce((s,p) => s+confirmedTotal(p), 0);
+  const shPs = ps.filter(p => shortage(p) > 0);
+  const sh   = shPs.reduce((s,p) => s+shortage(p), 0);
+
+  document.getElementById('d-target').textContent    = fmtYenS(tgt);
+  document.getElementById('d-proj-count').textContent= ps.length + '件のプロジェクト';
+  document.getElementById('d-conf').textContent      = fmtYenS(conf);
+  document.getElementById('d-sh').textContent        = sh > 0 ? fmtYenS(sh) : 'なし';
+  document.getElementById('d-sh-sub').textContent    = shPs.length > 0 ? shPs.length+'件で不足' : '全件充足';
+  document.getElementById('proj-notif').textContent  = shPs.length;
+  document.getElementById('d-sh-cnt').textContent    = shPs.length + '件';
+
+  // 平均送金実施率
+  const rates = activeRemits().filter(r=>r.actual>0).map(r=>execRate(r)).filter(Boolean);
+  document.getElementById('d-remit-rate').textContent = rates.length ? Math.round(rates.reduce((a,b)=>a+b)/rates.length)+'%' : '—';
+
+  // 資金不足リスト
+  const sl = document.getElementById('d-sh-list');
+  sl.innerHTML = shPs.length
+    ? shPs.map(p=>`<div class="alert-item"><div><div class="alert-name">${p.name}</div><div class="alert-meta">${cBadge(p.country)} ${p.year}年度</div></div><div class="alert-amount">▲ ${fmtYen(shortage(p))}</div></div>`).join('')
+    : '<div class="empty-state">不足なし ✅</div>';
+
+  // ドナーサマリ
+  const dons = activeDonors();
+  const byR = {採択:0, 申請中:0, 不採択:0};
+  dons.forEach(d => { if(byR[d.result]!==undefined) byR[d.result]++; });
+  document.getElementById('d-donor-sum').innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
+    ${[['採択','var(--accent2)'],['申請中','var(--accent)'],['不採択','var(--danger)']].map(([l,c])=>`
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block"></span><span style="font-size:12px;color:var(--text-muted)">${l}</span></div>
+      <span style="font-family:'DM Mono',monospace;color:${c};font-size:14px;font-weight:700">${byR[l]}件</span>
+    </div>`).join('')}
+  </div>`;
+
+  // 国別充足率バー
+  document.getElementById('d-country-bars').innerHTML = COUNTRIES.map(c => {
+    const cp   = ps.filter(p=>p.country===c);
+    if (!cp.length) return '';
+    const t    = cp.reduce((s,p)=>s+(p.target||0),0);
+    const cf2  = cp.reduce((s,p)=>s+confirmedTotal(p),0);
+    const pct  = t>0 ? Math.min(Math.round(cf2/t*100),100) : 0;
+    const col  = pct>=80?'var(--accent2)':pct>=50?'var(--accent)':'var(--warn)';
+    return `<div class="cbar">
+      <div class="cbar-hd"><span style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500"><span style="width:7px;height:7px;border-radius:50%;background:${cDotColor(c)};display:inline-block"></span>${c}</span><span style="font-family:'DM Mono',monospace;font-size:12px;color:${col}">${pct}%</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
+  }).join('');
+
+  // 四半期送金バー
+  const ar = activeRemits();
+  document.getElementById('d-remit-bars').innerHTML = QUARTERS.map(q => {
+    const qr   = ar.filter(r=>r.quarter===q);
+    if (!qr.length) return '';
+    const plan = qr.reduce((s,r)=>s+(r.planned||0),0);
+    const act  = qr.reduce((s,r)=>s+(r.actual||0),0);
+    const pct  = plan>0&&act>0 ? Math.min(Math.round(act/plan*100),100) : 0;
+    const col  = pct>=90?'var(--accent2)':pct>=60?'var(--accent)':pct>0?'var(--warn)':'var(--text-dim)';
+    return `<div class="cbar">
+      <div class="cbar-hd"><span style="font-family:'DM Mono',monospace;font-size:11px">${Q_LABELS[q]}</span><span style="font-family:'DM Mono',monospace;font-size:12px;color:${col}">${pct>0?pct+'%':'未実施'}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
+  }).join('') || '<div class="empty-state">送金データなし</div>';
+}
+
+// ═══════════════════════════════════════════
+// PROJECTS  国別グループ表示
+// ═══════════════════════════════════════════
+let projFilter = 'all';
+function renderProjects(f) {
+  if (f !== undefined) projFilter = f;
+  let data = activeProjs();
+  if (projFilter === 'shortage') data = data.filter(p => shortage(p) > 0);
+  else if (projFilter !== 'all') data = data.filter(p => p.country === projFilter);
+
+  const con = document.getElementById('proj-container');
+  const addBtn = `<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="openProjAdd()">＋ プロジェクト・管理費追加</button></div>`;
+
+  if (!data.length) {
+    con.innerHTML = addBtn + '<div class="table-wrap"><div class="empty-state">データがありません</div></div>';
+    return;
+  }
+
+  con.innerHTML = addBtn + COUNTRIES.map(country => {
+    const rows = data.filter(p => p.country === country);
+    if (!rows.length) return '';
+    const tTarget = rows.reduce((s,p)=>s+(p.target||0), 0);
+    const tConf   = rows.reduce((s,p)=>s+confirmedTotal(p), 0);
+    const tSh     = rows.reduce((s,p)=>s+Math.max(shortage(p),0), 0);
+    return `
+    <div class="cgroup">
+      <div class="cgroup-header">
+        <div class="cgroup-title">
+          <span style="width:10px;height:10px;border-radius:50%;background:${cDotColor(country)};display:inline-block"></span>${country}
+        </div>
+        <div class="cgroup-totals">
+          <div class="cgt"><div class="cgt-lbl">目標調達額合計</div><div class="cgt-val" style="color:var(--accent)">${fmtYen(tTarget)}</div></div>
+          <div class="cgt"><div class="cgt-lbl">確定資金合計</div><div class="cgt-val" style="color:var(--accent2)">${fmtYen(tConf)}</div></div>
+          <div class="cgt"><div class="cgt-lbl">不足額合計</div><div class="cgt-val" style="color:${tSh>0?'var(--danger)':'var(--accent2)'}">${tSh>0?fmtYen(tSh):'なし'}</div></div>
+        </div>
+      </div>
+      <div class="table-wrap"><div class="table-scroll"><table class="data-table">
+        <thead><tr>
+          <th>プロジェクト・管理費名</th><th>年度</th>
+          <th>目標調達額合計</th><th>確定資金額</th><th>不足額</th><th>資金ステータス</th><th>操作</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(p => {
+            const sh = shortage(p);
+            return `<tr>
+              <td><b>${p.name}</b></td>
+              <td class="mono">${p.year}年度</td>
+              <td class="mono" style="white-space:nowrap">${fmtYen(p.target)}</td>
+              <td class="mono" style="white-space:nowrap">
+                ${fmtYen(confirmedTotal(p))}
+                ${donorAdopted(p)>0 ? '<br><span style="font-size:9px;color:var(--accent2)">(うちドナー採択: '+fmtYen(donorAdopted(p))+')</span>' : ''}
+              </td>
+              <td style="white-space:nowrap">${sh>0
+                ? `<span style="color:var(--danger);font-family:'DM Mono',monospace;font-weight:600">▲ ${fmtYen(sh)}</span>`
+                : `<span style="color:var(--accent2);font-family:'DM Mono',monospace">なし</span>`}</td>
+              <td>${sh>0?'<span class="badge b-red">資金不足</span>':'<span class="badge b-green">安定</span>'}</td>
+              <td><div class="action-btns">
+                <button class="btn-edit" onclick="openProjEdit('${p.id}')">✏️ 編集</button>
+                <button class="btn-del"  onclick="deleteProject('${p.id}')">🗑 削除</button>
+              </div></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div></div>
+    </div>`;
+  }).join('');
+}
+function filterProj(f, el) {
+  document.querySelectorAll('#section-projects .view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderProjects(f);
+}
+
+// ═══════════════════════════════════════════
+// DONORS
+// ═══════════════════════════════════════════
+let donorFilter = 'all';
+function renderDonors(f) {
+  if (f !== undefined) donorFilter = f;
+  let data = activeDonors();
+  if (donorFilter !== 'all') data = data.filter(d => d.result === donorFilter);
+  document.getElementById('donor-count').textContent = data.length + '件';
+  const tb = document.getElementById('donor-tbody');
+  if (!data.length) {
+    tb.innerHTML = '<tr><td colspan="16"><div class="empty-state">データがありません</div></td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map(d => {
+    const proj = getProjById(d.projId);
+    const ar   = adoptRate(d);
+    const rb   = d.result==='採択'?'b-green':d.result==='不採択'?'b-red':'b-blue';
+    return `<tr>
+      <td><b>${d.name}</b></td>
+      <td style="font-size:11px;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${proj?proj.name:'—'}</td>
+      <td><span class="prio-${d.priority.toLowerCase()}">${d.priority}</span></td>
+      <td style="font-size:10px;color:var(--text-muted);white-space:nowrap">${d.recruitPeriod||'—'}</td>
+      <td style="font-size:10px;color:var(--text-muted);white-space:nowrap">${d.decisionTiming||'—'}</td>
+      <td class="mono" style="font-size:11px;white-space:nowrap">${d.applied?fmtYen(d.applied):'—'}</td>
+      <td class="mono" style="font-size:11px;white-space:nowrap">${d.adopted?fmtYen(d.adopted):'—'}</td>
+      <td>${ar!==null?`<span class="computed">${ar}%</span>`:'<span style="color:var(--text-dim)">—</span>'}</td>
+      <td><span class="badge ${rb}">${d.result}</span></td>
+      <td style="font-size:10px;color:var(--text-muted);white-space:nowrap">${d.applyDate||'—'}</td>
+      <td style="font-size:10px;color:var(--text-muted);white-space:nowrap">${d.resultDate||'—'}</td>
+      <td style="font-size:10px;color:var(--text-muted);white-space:nowrap">${d.payConfirmDate||'—'}</td>
+      <td style="font-size:10px;color:var(--text-muted);white-space:nowrap">${d.payment||'—'}</td>
+      <td>${d.url?`<a href="${d.url}" target="_blank" class="url-link">🔗リンク</a>`:'—'}</td>
+      <td style="font-size:10px;color:var(--text-muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.notes||''}">${d.notes||'—'}</td>
+      <td><div class="action-btns">
+        <button class="btn-edit" onclick="openDonorEdit('${d.id}')">✏️</button>
+        <button class="btn-del"  onclick="deleteDonor('${d.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function filterDonor(f, el) {
+  document.querySelectorAll('#section-donors .view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderDonors(f);
+}
+
+// ═══════════════════════════════════════════
+// REMITTANCE  四半期×国別
+// ═══════════════════════════════════════════
+function renderRemittances() {
+  const con = document.getElementById('remit-container');
+  const ar  = activeRemits();
+  if (!ar.length) {
+    con.innerHTML = '<div class="table-wrap"><div class="empty-state">送金データがありません</div></div>';
+    return;
+  }
+
+  con.innerHTML = QUARTERS.map(q => {
+    const qr    = ar.filter(r => r.quarter === q);
+    const qPlan = qr.reduce((s,r) => s+(r.planned||0), 0);
+    const qAct  = qr.reduce((s,r) => s+(r.actual||0),  0);
+    const qRate = (qPlan>0 && qAct>0) ? Math.round(qAct/qPlan*100) : null;
+    const rCol  = qRate!=null ? (qRate>=90?'var(--accent2)':qRate>=70?'var(--accent)':'var(--warn)') : 'var(--text-dim)';
+
+    // 国別サブグループ
+    const cBlocks = COUNTRIES.map(c => {
+      const cIds  = activeProjs().filter(p=>p.country===c).map(p=>p.id);
+      const cR    = qr.filter(r => cIds.includes(r.projId));
+      if (!cR.length) return '';
+      const cPlan = cR.reduce((s,r)=>s+(r.planned||0),0);
+      const cAct  = cR.reduce((s,r)=>s+(r.actual||0), 0);
+      return `
+      <div class="crsub">
+        <div class="crsub-header">
+          <div class="crsub-title">
+            <span style="width:8px;height:8px;border-radius:50%;background:${cDotColor(c)};display:inline-block"></span>${c}
+          </div>
+          <div class="crsub-totals">
+            <span>計画: <b style="color:var(--accent)">${fmtYen(cPlan)}</b></span>
+            <span>実績: <b style="color:${cAct>0?'var(--accent2)':'var(--text-dim)'}">${cAct>0?fmtYen(cAct):'未実施'}</b></span>
+          </div>
+        </div>
+        <div class="table-wrap"><div class="table-scroll"><table class="data-table">
+          <thead><tr>
+            <th>プロジェクト・管理費名</th>
+            <th>計画送金額</th><th>実績送金額</th><th>送金日</th><th>実施率</th><th>備考</th><th>操作</th>
+          </tr></thead>
+          <tbody>
+            ${cR.map(r => {
+              const proj = getProjById(r.projId);
+              const er   = execRate(r);
+              const ec   = er!=null ? (er>=90?'var(--accent2)':er>=70?'var(--accent)':'var(--warn)') : 'var(--text-dim)';
+              return `<tr>
+                <td>${proj ? proj.name : '—'}</td>
+                <td class="mono" style="font-size:11px;white-space:nowrap">${fmtYen(r.planned)}</td>
+                <td class="mono" style="font-size:11px;white-space:nowrap">${r.actual>0?fmtYen(r.actual):'<span style="color:var(--text-dim)">未実施</span>'}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${r.date||'—'}</td>
+                <td>${er!=null?`<span class="computed" style="color:${ec}">${er}%</span>`:'<span style="color:var(--text-dim)">—</span>'}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${r.notes||''}</td>
+                <td><div class="action-btns">
+                  <button class="btn-edit" onclick="openRemitEdit('${r.id}')">✏️</button>
+                  <button class="btn-del"  onclick="deleteRemit('${r.id}')">🗑</button>
+                </div></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div></div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="qgroup">
+      <div class="qgroup-header">
+        <div class="qgroup-title">${Q_LABELS[q]}</div>
+        <div class="qgroup-summary">
+          <div class="qsum"><div class="qsum-lbl">計画合計</div><div class="qsum-val" style="color:var(--accent)">${fmtYen(qPlan)}</div></div>
+          <div class="qsum"><div class="qsum-lbl">実績合計</div><div class="qsum-val" style="color:${qAct>0?'var(--accent2)':'var(--text-dim)'}">${qAct>0?fmtYen(qAct):'未実施'}</div></div>
+          <div class="qsum"><div class="qsum-lbl">実施率</div><div class="qsum-val" style="color:${rCol}">${qRate!=null?qRate+'%':'—'}</div></div>
+        </div>
+      </div>
+      ${cBlocks || '<div style="color:var(--text-dim);font-size:12px;padding:8px">この四半期の送金データなし</div>'}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// YEAR SWITCHER
+// ═══════════════════════════════════════════
+function renderYearSW() {
+  document.getElementById('ysw-list').innerHTML = fiscalYears.map(fy =>
+    `<div class="ybtn ${fy.year===activeYear?'active':''}" onclick="switchYear(${fy.year})">
+      <span>${fy.year}年度${fy.label?' ('+fy.label+')':''}</span>
+      <span class="ybtn-period">${fy.startMonth}〜${fy.endMonth}月</span>
+    </div>`
+  ).join('');
+  document.getElementById('tb-year').textContent = activeYear + '年度';
+}
+function renderYearModalList() {
+  const el = document.getElementById('year-modal-list');
+  if (!el) return;
+  if (!fiscalYears.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px">年度未登録</div>'; return; }
+  el.innerHTML = fiscalYears.map(fy => {
+    const ia = fy.year === activeYear;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface2);border-radius:7px;margin-bottom:7px;border:1px solid ${ia?'rgba(79,142,247,.3)':'var(--border)'}">
+      <div>
+        <span style="font-family:'DM Mono',monospace;font-size:13px;${ia?'color:var(--accent);font-weight:600':''}">${fy.year}年度${fy.label?' ('+fy.label+')':''}</span>
+        <span style="font-size:10px;color:var(--text-muted);margin-left:10px">${fy.startMonth}月〜${fy.endMonth}月</span>
+        ${ia?'<span class="badge b-blue" style="margin-left:8px;font-size:9px">表示中</span>':''}
+      </div>
+      <div style="display:flex;gap:5px">
+        <button class="btn-edit" onclick="openYearEdit('${fy.id}')">✏️</button>
+        ${!ia?`<button class="btn-del" onclick="deleteFY('${fy.id}')">🗑</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function switchYear(y) { activeYear = y; renderYearSW(); renderAll(); }
+function openYearModal() { renderYearModalList(); document.getElementById('year-modal').classList.add('open'); }
+function openYearEdit(id) {
+  const fy = fiscalYears.find(x=>x.id===id); if (!fy) return;
+  document.getElementById('eye-id').value    = fy.id;
+  document.getElementById('eye-year').value  = fy.year;
+  document.getElementById('eye-label').value = fy.label||'';
+  document.getElementById('eye-start').value = fy.startMonth;
+  document.getElementById('eye-end').value   = fy.endMonth;
+  CM('year-modal');
+  document.getElementById('year-edit-modal').classList.add('open');
+}
+function saveFY() {
+  const id = document.getElementById('eye-id').value;
+  const fy = fiscalYears.find(x=>x.id===id); if (!fy) return;
+  const ny = parseInt(document.getElementById('eye-year').value);
+  if (fiscalYears.find(x=>x.year===ny && x.id!==id)) { alert(`${ny}年度はすでに登録されています`); return; }
+  const oy = fy.year;
+  fy.year       = ny;
+  fy.label      = document.getElementById('eye-label').value.trim();
+  fy.startMonth = parseInt(document.getElementById('eye-start').value);
+  fy.endMonth   = parseInt(document.getElementById('eye-end').value);
+  if (oy !== ny) { projects.filter(p=>p.year===oy).forEach(p=>p.year=ny); if (activeYear===oy) activeYear=ny; }
+  fiscalYears.sort((a,b)=>a.year-b.year);
+  CM('year-edit-modal');
+  renderYearSW(); updateYearSelects(); renderAll(); openYearModal();
+}
+function addFY() {
+  const y  = parseInt(document.getElementById('fy-year').value);
+  const lb = document.getElementById('fy-label').value.trim();
+  const sm = parseInt(document.getElementById('fy-start').value);
+  const em = parseInt(document.getElementById('fy-end').value);
+  if (!y||y<2020||y>2031) { alert('年度は2020〜2031で入力してください'); return; }
+  if (fiscalYears.find(fy=>fy.year===y)) { alert(`${y}年度はすでに登録されています`); return; }
+  fiscalYears.push({ id:'fy'+y, year:y, label:lb, startMonth:sm, endMonth:em });
+  fiscalYears.sort((a,b)=>a.year-b.year);
+  document.getElementById('fy-year').value=''; document.getElementById('fy-label').value='';
+  renderYearSW(); updateYearSelects(); renderYearModalList();
+}
+function deleteFY(id) {
+  const fy = fiscalYears.find(x=>x.id===id); if (!fy) return;
+  const n  = projects.filter(p=>p.year===fy.year).length;
+  if (!confirm(`${fy.year}年度を削除しますか？${n?`\n関連プロジェクト${n}件・ドナー・送金データも削除されます。`:''}`)) return;
+  const pids = projects.filter(p=>p.year===fy.year).map(p=>p.id);
+  projects    = projects.filter(p=>p.year!==fy.year);
+  donors      = donors.filter(d=>!pids.includes(d.projId));
+  remittances = remittances.filter(r=>!pids.includes(r.projId));
+  fiscalYears = fiscalYears.filter(x=>x.id!==id);
+  renderYearSW(); renderYearModalList(); updateYearSelects();
+}
+function updateYearSelects() {
+  const opts = fiscalYears.map(fy=>`<option value="${fy.year}">${fy.year}年度</option>`).join('');
+  const el   = document.getElementById('pm-year');
+  if (el) el.innerHTML = opts;
+}
+
+// ═══════════════════════════════════════════
+// MODAL helpers
+// ═══════════════════════════════════════════
+const CM = id => document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.modal-overlay').forEach(m =>
+  m.addEventListener('click', e => { if (e.target===m) m.classList.remove('open'); })
+);
+function populateProjSel(selId) {
+  const el = document.getElementById(selId); if (!el) return;
+  el.innerHTML = '<option value="">選択してください</option>' +
+    activeProjs().map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+// ── Project CRUD ──
+function openProjAdd() {
+  document.getElementById('pm-id').value = '';
+  ['pm-name','pm-target','pm-conf'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('pm-country').value = '';
+  updateYearSelects();
+  document.getElementById('pm-year').value = activeYear;
+  document.getElementById('proj-modal-title').textContent = '🗂 プロジェクト・管理費追加';
+  document.getElementById('proj-modal').classList.add('open');
+}
+function openProjEdit(id) {
+  const p = projects.find(x=>x.id===id); if (!p) return;
+  document.getElementById('pm-id').value      = p.id;
+  document.getElementById('pm-name').value    = p.name;
+  document.getElementById('pm-country').value = p.country;
+  updateYearSelects();
+  document.getElementById('pm-year').value    = p.year;
+  document.getElementById('pm-target').value  = p.target||'';
+  document.getElementById('pm-conf').value    = p.confirmed||'';
+  document.getElementById('proj-modal-title').textContent = '✏️ プロジェクト・管理費編集';
+  document.getElementById('proj-modal').classList.add('open');
+}
+function saveProject() {
+  const id      = document.getElementById('pm-id').value;
+  const name    = document.getElementById('pm-name').value.trim();
+  const country = document.getElementById('pm-country').value;
+  const year    = parseInt(document.getElementById('pm-year').value);
+  const target  = parseInt(document.getElementById('pm-target').value)||0;
+  const conf    = parseInt(document.getElementById('pm-conf').value)||0;
+  if (!name||!country) { alert('名前と国を入力してください'); return; }
+  if (id) { Object.assign(projects.find(x=>x.id===id), {name,country,year,target,confirmed:conf}); }
+  else    { projects.push({id:'p'+Date.now(), name, country, year, target, confirmed:conf}); }
+  CM('proj-modal'); renderAll();
+}
+function deleteProject(id) {
+  const p = projects.find(x=>x.id===id); if (!p) return;
+  if (!confirm(`「${p.name}」を削除しますか？\n関連するドナー・送金記録も削除されます。`)) return;
+  projects    = projects.filter(x=>x.id!==id);
+  donors      = donors.filter(x=>x.projId!==id);
+  remittances = remittances.filter(x=>x.projId!==id);
+  renderAll();
+}
+
+// ── Donor CRUD ──
+function openDonorAdd() {
+  document.getElementById('dm-id').value = '';
+  ['dm-name','dm-recruit','dm-decision','dm-url','dm-applied','dm-adopted',
+   'dm-apply-date','dm-result-date','dm-payment','dm-pay-confirm','dm-notes'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
+  document.getElementById('dm-priority').value = 'A';
+  document.getElementById('dm-result').value   = '申請中';
+  populateProjSel('dm-proj');
+  document.getElementById('donor-modal-title').textContent = '💰 ドナー・助成金追加';
+  document.getElementById('donor-modal').classList.add('open');
+}
+function openDonorEdit(id) {
+  const d = donors.find(x=>x.id===id); if (!d) return;
+  populateProjSel('dm-proj');
+  document.getElementById('dm-id').value          = d.id;
+  document.getElementById('dm-name').value         = d.name;
+  document.getElementById('dm-proj').value         = d.projId;
+  document.getElementById('dm-priority').value     = d.priority;
+  document.getElementById('dm-result').value       = d.result;
+  document.getElementById('dm-recruit').value      = d.recruitPeriod||'';
+  document.getElementById('dm-decision').value     = d.decisionTiming||'';
+  document.getElementById('dm-url').value          = d.url||'';
+  document.getElementById('dm-applied').value      = d.applied||'';
+  document.getElementById('dm-adopted').value      = d.adopted||'';
+  document.getElementById('dm-apply-date').value   = d.applyDate||'';
+  document.getElementById('dm-result-date').value  = d.resultDate||'';
+  document.getElementById('dm-payment').value      = d.payment||'';
+  document.getElementById('dm-pay-confirm').value  = d.payConfirmDate||'';
+  document.getElementById('dm-notes').value        = d.notes||'';
+  document.getElementById('donor-modal-title').textContent = '✏️ ドナー編集';
+  document.getElementById('donor-modal').classList.add('open');
+}
+function saveDonor() {
+  const id     = document.getElementById('dm-id').value;
+  const name   = document.getElementById('dm-name').value.trim();
+  const projId = document.getElementById('dm-proj').value;
+  if (!name||!projId) { alert('ドナー名と対象プロジェクトを選択してください'); return; }
+  const data = {
+    name, projId,
+    priority:       document.getElementById('dm-priority').value,
+    result:         document.getElementById('dm-result').value,
+    recruitPeriod:  document.getElementById('dm-recruit').value,
+    decisionTiming: document.getElementById('dm-decision').value,
+    url:            document.getElementById('dm-url').value,
+    applied:        parseInt(document.getElementById('dm-applied').value)||0,
+    adopted:        parseInt(document.getElementById('dm-adopted').value)||0,
+    applyDate:      document.getElementById('dm-apply-date').value,
+    resultDate:     document.getElementById('dm-result-date').value,
+    payment:        document.getElementById('dm-payment').value,
+    payConfirmDate: document.getElementById('dm-pay-confirm').value,
+    notes:          document.getElementById('dm-notes').value,
+  };
+  if (id) { Object.assign(donors.find(x=>x.id===id), data); }
+  else    { donors.push({id:'d'+Date.now(), ...data}); }
+  CM('donor-modal'); renderAll();
+}
+function deleteDonor(id) {
+  const d = donors.find(x=>x.id===id); if (!d) return;
+  if (!confirm(`「${d.name}」を削除しますか？`)) return;
+  donors = donors.filter(x=>x.id!==id); renderAll();
+}
+
+// ── Remittance CRUD ──
+function openRemitAdd() {
+  document.getElementById('rm-id').value = '';
+  ['rm-planned','rm-actual','rm-date','rm-notes'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
+  document.getElementById('rm-quarter').value = 'Q1';
+  populateProjSel('rm-proj');
+  document.getElementById('remit-modal-title').textContent = '✈️ 送金記録追加';
+  document.getElementById('remit-modal').classList.add('open');
+}
+function openRemitEdit(id) {
+  const r = remittances.find(x=>x.id===id); if (!r) return;
+  populateProjSel('rm-proj');
+  document.getElementById('rm-id').value      = r.id;
+  document.getElementById('rm-proj').value    = r.projId;
+  document.getElementById('rm-quarter').value = r.quarter;
+  document.getElementById('rm-planned').value = r.planned||'';
+  document.getElementById('rm-actual').value  = r.actual||'';
+  document.getElementById('rm-date').value    = r.date||'';
+  document.getElementById('rm-notes').value   = r.notes||'';
+  document.getElementById('remit-modal-title').textContent = '✏️ 送金記録編集';
+  document.getElementById('remit-modal').classList.add('open');
+}
+function saveRemit() {
+  const id     = document.getElementById('rm-id').value;
+  const projId = document.getElementById('rm-proj').value;
+  if (!projId) { alert('プロジェクトを選択してください'); return; }
+  const data = {
+    projId,
+    quarter: document.getElementById('rm-quarter').value,
+    planned: parseInt(document.getElementById('rm-planned').value)||0,
+    actual:  parseInt(document.getElementById('rm-actual').value)||0,
+    date:    document.getElementById('rm-date').value,
+    notes:   document.getElementById('rm-notes').value,
+  };
+  if (id) { Object.assign(remittances.find(x=>x.id===id), data); }
+  else    { remittances.push({id:'r'+Date.now(), ...data}); }
+  CM('remit-modal'); renderAll();
+}
+function deleteRemit(id) {
+  if (!confirm('この送金記録を削除しますか？')) return;
+  remittances = remittances.filter(x=>x.id!==id); renderAll();
+}
+
+// ═══════════════════════════════════════════
+// SECTION NAV
+// ═══════════════════════════════════════════
+const SEC_META = {
+  dashboard:  {icon:'📊', title:'ダッシュボード'},
+  projects:   {icon:'🗂', title:'プロジェクト・管理費管理'},
+  donors:     {icon:'💰', title:'助成金・ドナー管理'},
+  remittance: {icon:'✈️', title:'海外送金管理（四半期別）'},
+  schema:     {icon:'📐', title:'DB設計・仕様書'},
+};
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${id}'`)) n.classList.add('active');
+  });
+  const m = SEC_META[id]||{};
+  document.getElementById('tb-icon').textContent  = m.icon||'';
+  document.getElementById('tb-title').textContent = m.title||'';
+}
+
+// ═══════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════
+function renderAll() {
+  renderDashboard();
+  renderProjects();
+  renderDonors(donorFilter);
+  renderRemittances();
+}
+
+// ═══════════════════════════════════════════
+// VERIFICATION  (Node.js 不要 — ブラウザコンソールで実行)
+// ═══════════════════════════════════════════
+function runVerification() {
+  var ok = 0, ng = 0;
+  var logs = [];
+  var errs = [];
+  function pass(msg) { console.log('  OK ' + msg); ok++; }
+  function fail(msg) { console.error('  NG ' + msg); ng++; }
+
+  console.log('=== NGO管理システム 紐づき・計算検証 ===');
+
+  // 1. ドナー → プロジェクト リレーション
+  console.log('[① ドナー→プロジェクト リレーション]');
+  donors.forEach(function(d) {
+    var p = getProjById(d.projId);
+    p ? pass(d.name + ' → ' + p.name + ' (' + p.country + ')')
+      : fail(d.name + ': projId=' + d.projId + ' のプロジェクトが存在しない');
+  });
+
+  // 2. 送金 → プロジェクト リレーション + ロールアップ
+  console.log('[② 送金→プロジェクト リレーション]');
+  remittances.forEach(function(r) {
+    var p = getProjById(r.projId);
+    if (!p) { fail('送金(' + r.id + '): projId=' + r.projId + ' が存在しない'); return; }
+    pass('送金(' + r.id + ') ' + r.quarter + ' → ' + p.name + ' [国:' + p.country + ' 年度:' + p.year + ']');
+  });
+
+  // 3. 不足額計算 (目標調達額合計 − 確定資金額)
+  console.log('[③ 不足額計算]');
+  projects.forEach(function(p) {
+    var sh = shortage(p);
+    var exp = (p.target||0) - confirmedTotal(p);
+    sh === exp
+      ? pass(p.name + ': 目標' + p.target.toLocaleString() + ' - 確定(合計)' + confirmedTotal(p).toLocaleString() + ' = 不足' + sh.toLocaleString() + '円 [' + (sh>0?'資金不足':'安定') + ']')
+      : fail(p.name + ': 計算値' + sh + ' 期待値' + exp);
+  });
+
+  // 4. 採択率計算
+  console.log('[④ 採択率計算]');
+  donors.forEach(function(d) {
+    var ar = adoptRate(d);
+    if (ar !== null) {
+      var exp = Math.round(d.adopted/d.applied*100);
+      ar === exp
+        ? pass(d.name + ': ' + d.adopted.toLocaleString() + '÷' + d.applied.toLocaleString() + '×100 = ' + ar + '%')
+        : fail(d.name + ': 計算値' + ar + '% 期待値' + exp + '%');
+    } else {
+      pass(d.name + ': 採択額なし(' + d.result + ') → 算出対象外');
+    }
+  });
+
+  // 5. 送金実施率計算
+  console.log('[⑤ 送金実施率計算]');
+  remittances.forEach(function(r) {
+    var er = execRate(r);
+    var p  = getProjById(r.projId);
+    var pname = p ? p.name : r.projId;
+    if (er !== null) {
+      var exp = Math.round(r.actual/r.planned*100);
+      er === exp
+        ? pass(pname + ' ' + r.quarter + ': ' + r.actual.toLocaleString() + '÷' + r.planned.toLocaleString() + '×100 = ' + er + '%')
+        : fail('送金(' + r.id + '): 計算値' + er + '% 期待値' + exp + '%');
+    } else {
+      pass(pname + ' ' + r.quarter + ': 未実施 → 算出対象外');
+    }
+  });
+
+  // 6. 四半期×国別集計
+  console.log('[⑥ 四半期×国別集計]');
+  var ar2 = activeRemits();
+  QUARTERS.forEach(function(q) {
+    var qr    = ar2.filter(function(r){ return r.quarter===q; });
+    var qPlan = qr.reduce(function(s,r){ return s+(r.planned||0); }, 0);
+    var qAct  = qr.reduce(function(s,r){ return s+(r.actual||0); }, 0);
+    var qRate = (qPlan>0&&qAct>0) ? Math.round(qAct/qPlan*100) : null;
+    pass(Q_LABELS[q] + ': 計画=' + qPlan.toLocaleString() + '円 実績=' + (qAct>0?qAct.toLocaleString()+'円':'未実施') + ' 実施率=' + (qRate!=null?qRate+'%':'—'));
+    COUNTRIES.forEach(function(c) {
+      var cIds  = activeProjs().filter(function(p){ return p.country===c; }).map(function(p){ return p.id; });
+      var cR    = qr.filter(function(r){ return cIds.includes(r.projId); });
+      if (!cR.length) return;
+      var cPlan = cR.reduce(function(s,r){ return s+(r.planned||0); }, 0);
+      var cAct  = cR.reduce(function(s,r){ return s+(r.actual||0); }, 0);
+      pass('  └' + c + ': 計画=' + cPlan.toLocaleString() + '円 実績=' + (cAct>0?cAct.toLocaleString()+'円':'未実施'));
+    });
+  });
+
+  // 7. 年度フィルタ
+  console.log('[⑦ 年度フィルタ (activeYear=' + activeYear + ')]');
+  var ap = activeProjs();
+  var yearOk = ap.every(function(p){ return p.year===activeYear; });
+  yearOk
+    ? pass('全' + ap.length + '件が' + activeYear + '年度に正しくフィルタ済み')
+    : fail('年度フィルタに不整合あり');
+
+  console.log('─────────────────────────────────');
+  console.log('検証完了: OK ' + ok + '件  NG ' + ng + '件');
+  if (ng === 0) console.log('全検証パス！データ整合性に問題なし');
+  return { ok: ok, ng: ng };
+}
+
+
+// ═══════════════════════════════════════════
+// DATA I/O  — GitHub API 自動連携 v3.0
+// ═══════════════════════════════════════════
+
+var GH = {
+  owner:    'EfaJapan',
+  repo:     'Fundraising-Management-App',
+  branch:   'main',
+  dataFile: 'ngo_data.json',
+  _sha:     null,   // 最後に取得したファイルSHA（PUT時に必要）
+  _pat:     null,   // Personal Access Token
+};
+
+// ── PAT管理 ──
+function ghPat() {
+  if (!GH._pat) GH._pat = localStorage.getItem('gh_pat') || '';
+  return GH._pat;
+}
+function savePat() {
+  var val = document.getElementById('pat-input').value.trim();
+  if (!val) { showToast('❌ トークンを入力してください', 'err'); return; }
+  GH._pat = val;
+  localStorage.setItem('gh_pat', val);
+  closePatModal();
+  showToast('✅ トークンを保存しました。データを読み込みます...', 'ok');
+  ghLoad(true);
+}
+function openPatModal() {
+  var stored = ghPat();
+  document.getElementById('pat-input').value = stored || '';
+  document.getElementById('pat-modal').classList.add('open');
+}
+function closePatModal() {
+  document.getElementById('pat-modal').classList.remove('open');
+}
+
+// ── GitHub APIのベースURL ──
+function ghApiUrl(path) {
+  return 'https://api.github.com/repos/' + GH.owner + '/' + GH.repo + '/contents/' + path;
+}
+function ghHeaders() {
+  return {
+    'Authorization': 'token ' + ghPat(),
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+  };
+}
+
+// ── データ自動読み込み（起動時） ──
+function ghLoad(showMsg) {
+  var pat = ghPat();
+  if (!pat) {
+    // PAT未設定 → 設定モーダルを表示
+    setTimeout(function() { openPatModal(); }, 500);
+    setStatus('⚠️ 初回設定が必要です（⚙ボタンをクリック）', 'var(--warn)');
+    return;
+  }
+
+  setStatus('⏳ 読込中...', 'var(--text-muted)');
+
+  fetch(ghApiUrl(GH.dataFile), { headers: ghHeaders() })
+  .then(function(res) {
+    if (res.status === 404) {
+      // ファイルが存在しない → 空データで開始
+      setStatus('✅ 新規データで開始', 'var(--accent2)');
+      return null;
+    }
+    if (res.status === 401) {
+      setStatus('❌ 認証エラー', 'var(--danger)');
+      showToast('❌ GitHubトークンが無効です。⚙ボタンから再設定してください。', 'err');
+      return null;
+    }
+    if (!res.ok) {
+      setStatus('❌ 読込失敗', 'var(--danger)');
+      return null;
+    }
+    return res.json();
+  })
+  .then(function(file) {
+    if (!file) return;
+    GH._sha = file.sha;
+    var text = atob(file.content.replace(/\n/g, ''));
+    // UTF-8デコード
+    var bytes = new Uint8Array(text.length);
+    for (var i=0; i<text.length; i++) bytes[i] = text.charCodeAt(i);
+    var decoded = new TextDecoder('utf-8').decode(bytes);
+    var data = JSON.parse(decoded);
+
+    if (!data.projects || !data.donors || !data.remittances) {
+      setStatus('❌ データ形式エラー', 'var(--danger)'); return;
+    }
+    if (data.fiscalYears && data.fiscalYears.length) fiscalYears = data.fiscalYears;
+    projects    = data.projects;
+    donors      = data.donors;
+    remittances = data.remittances;
+    if (fiscalYears.length) {
+      // 最新年度を選択
+      var maxYear = Math.max.apply(null, fiscalYears.map(function(f){ return f.year; }));
+      activeYear = maxYear;
+    }
+    renderYearSW(); updateYearSelects(); renderAll();
+
+    var savedAt = data.savedAt ? new Date(data.savedAt).toLocaleString('ja-JP') : '';
+    setStatus('✅ ' + savedAt + ' 読込済', 'var(--accent2)');
+    if (showMsg) showToast('📂 GitHubから読み込みました（プロジェクト:' + data.projects.length + '件）', 'ok');
+  })
+  .catch(function(e) {
+    setStatus('❌ 接続エラー', 'var(--danger)');
+    showToast('❌ GitHub接続エラー: ' + e.message, 'err');
+  });
+}
+
+// ── データ保存（GitHub API PUT） ──
+function ghSave() {
+  var pat = ghPat();
+  if (!pat) { openPatModal(); return; }
+
+  var btn = document.getElementById('btn-gh-save');
+  var lbl = document.getElementById('gh-save-label');
+  btn.disabled = true;
+  lbl.textContent = '⏳ 保存中...';
+
+  var payload = {
+    version:     '2.0',
+    savedAt:     new Date().toISOString(),
+    appVersion:  'NGO Ops v3.0',
+    fiscalYears: fiscalYears,
+    projects:    projects,
+    donors:      donors,
+    remittances: remittances,
+  };
+  var json    = JSON.stringify(payload, null, 2);
+  // UTF-8 → base64
+  var bytes   = new TextEncoder().encode(json);
+  var bin     = String.fromCharCode.apply(null, bytes);
+  var b64     = btoa(bin);
+
+  var body = {
+    message: '💾 データ更新 ' + new Date().toLocaleString('ja-JP'),
+    content: b64,
+    branch:  GH.branch,
+  };
+  if (GH._sha) body.sha = GH._sha;
+
+  fetch(ghApiUrl(GH.dataFile), {
+    method:  'PUT',
+    headers: ghHeaders(),
+    body:    JSON.stringify(body),
+  })
+  .then(function(res) {
+    btn.disabled = false;
+    lbl.textContent = '☁️ 保存';
+    if (res.ok) {
+      return res.json().then(function(j) {
+        if (j.content) GH._sha = j.content.sha;
+        var now = new Date();
+        var ts  = ('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+        setStatus('✅ ' + ts + ' 保存済', 'var(--accent2)');
+        showToast('☁️ GitHubに保存しました（' + ts + '）', 'ok');
+      });
+    } else {
+      return res.json().then(function(j) {
+        var msg = (j.message || JSON.stringify(j)).slice(0, 80);
+        setStatus('❌ 保存失敗', 'var(--danger)');
+        showToast('❌ 保存失敗(' + res.status + '): ' + msg, 'err');
+      });
+    }
+  })
+  .catch(function(e) {
+    btn.disabled = false;
+    lbl.textContent = '☁️ 保存';
+    setStatus('❌ エラー', 'var(--danger)');
+    showToast('❌ 通信エラー: ' + e.message, 'err');
+  });
+}
+
+// ── ステータス表示 ──
+function setStatus(msg, color) {
+  var el = document.getElementById('gh-status');
+  el.textContent = msg;
+  el.style.color = color || 'var(--text-muted)';
+}
+
+// ── トースト通知 ──
+function showToast(msg, type) {
+  var t = document.getElementById('io-toast');
+  t.textContent = msg;
+  t.className = 'io-toast ' + type + ' show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.classList.remove('show'); }, 5000);
+}
+
+// 後方互換（旧ボタン名）
+function saveData()          { ghSave(); }
+function saveToFile()        { ghSave(); }
+function saveToSharePoint()  { ghSave(); }
+function loadFromSharePoint(){ ghLoad(true); }
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+
+renderYearSW();
+updateYearSelects();
+renderAll();
+
+// GitHub から自動読み込み
+ghLoad(false);
+
+// 検証実行（コンソールに結果を出力）
+const result = runVerification();
+// 画面にも簡易バナー表示
+const banner = document.createElement('div');
+banner.style.cssText = `position:fixed;bottom:16px;right:16px;background:${result.ng===0?'rgba(56,217,169,.9)':'rgba(247,79,106,.9)'};color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;font-family:'DM Mono',monospace;z-index:9999;cursor:pointer;`;
+banner.textContent = result.ng===0 ? '✅ 全検証パス（コンソール参照）' : `❌ エラー${result.ng}件（コンソール参照）`;
+banner.onclick = () => banner.remove();
+document.body.appendChild(banner);
+setTimeout(() => banner && banner.remove(), 8000);
+</script>
+<div class="io-toast" id="io-toast"></div>
+
+<!-- GitHub PAT設定モーダル -->
+<div class="pat-modal" id="pat-modal">
+  <div class="pat-box">
+    <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text)">⚙ GitHub設定</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:18px;">
+      GitHubにデータを保存するために、Personal Access Token（PAT）が必要です。<br>
+      入力した情報はこの端末のブラウザにのみ保存されます。
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:4px;font-family:'DM Mono',monospace;">PERSONAL ACCESS TOKEN *</label>
+      <input id="pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;">
+      <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">
+        GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)<br>
+        権限：<b style="color:var(--accent)">repo</b> にチェック
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+      <button onclick="closePatModal()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;">キャンセル</button>
+      <button onclick="savePat()" style="background:var(--accent);color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;">保存して接続</button>
+    </div>
+  </div>
+</div>
+<div class="io-toast" id="io-toast"></div>
+
+</body>
+</html>
