@@ -234,24 +234,18 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .sp-signin{background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);
   border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:var(--text-muted);}
 
-/* ── GITHUB I/O ── */
-.gh-bar{display:flex;align-items:center;gap:8px;}
-.btn-gh-save{background:rgba(56,217,169,.15);border:1px solid rgba(56,217,169,.35);color:var(--accent2);
-  padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
-  cursor:pointer;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:6px;}
-.btn-gh-save:hover{background:rgba(56,217,169,.28);}
-.btn-gh-save:disabled{opacity:.5;cursor:not-allowed;}
-.gh-status{font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;}
 .io-toast{position:fixed;bottom:60px;right:16px;padding:10px 18px;border-radius:8px;
-  font-size:12px;font-family:'DM Mono',monospace;color:#fff;z-index:9999;max-width:400px;
+  font-size:12px;font-family:'DM Mono',monospace;color:#fff;z-index:9999;max-width:420px;
   opacity:0;transition:opacity .3s;pointer-events:none;}
 .io-toast.show{opacity:1;}
 .io-toast.ok{background:rgba(56,217,169,.92);}
 .io-toast.err{background:rgba(247,79,106,.92);}
-/* PAT設定モーダル */
-.pat-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:none;align-items:center;justify-content:center;}
-.pat-modal.open{display:flex;}
-.pat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:480px;width:90%;}
+.gh-btn{background:rgba(56,217,169,.15);border:1px solid rgba(56,217,169,.35);color:var(--accent2);
+  padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;font-weight:500;transition:all .15s;}
+.gh-btn:hover{background:rgba(56,217,169,.28);}
+.gh-btn:disabled{opacity:.5;cursor:not-allowed;}
+.gh-stat{font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -283,14 +277,11 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 <main class="main">
   <div class="topbar">
     <div class="page-title"><span id="tb-icon">📊</span><span id="tb-title">ダッシュボード</span></div>
-    <div class="topbar-r">
-      <div class="gh-bar">
-        <button class="btn-gh-save" id="btn-gh-save" onclick="ghSave()" title="GitHubに保存">
-          <span id="gh-save-label">☁️ 保存</span>
-        </button>
-        <span class="gh-status" id="gh-status"></span>
-        <button class="btn-ghost btn-sm" onclick="openPatModal()" title="GitHub設定" style="padding:4px 8px;font-size:11px;">⚙</button>
-      </div>
+    <div class="topbar-r" style="display:flex;align-items:center;gap:10px;">
+      <span class="gh-stat" id="gh-stat"></span>
+      <span style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace" id="tb-year">2025年度</span>
+      <button class="gh-btn" id="gh-save-btn" onclick="ghSave()">☁️ 保存</button>
+      <button class="btn btn-ghost btn-sm" onclick="ghOpenConfig()" title="GitHub設定">⚙</button>
     </div>
   </div>
   <div class="content">
@@ -1309,44 +1300,59 @@ function runVerification() {
 
 
 // ═══════════════════════════════════════════
-// DATA I/O  — GitHub API 自動連携 v3.0
+// DATA I/O — GitHub API v3.0
 // ═══════════════════════════════════════════
-
 var GH = {
-  owner:    'EfaJapan',
-  repo:     'Fundraising-Management-App',
-  branch:   'main',
-  dataFile: 'ngo_data.json',
-  _sha:     null,   // 最後に取得したファイルSHA（PUT時に必要）
-  _pat:     null,   // Personal Access Token
+  owner: 'EfaJapan',
+  repo:  'Fundraising-Management-App',
+  branch:'main',
+  file:  'ngo_data.json',
+  sha:   null,
+  pat:   null,
 };
 
-// ── PAT管理 ──
 function ghPat() {
-  if (!GH._pat) GH._pat = localStorage.getItem('gh_pat') || '';
-  return GH._pat;
-}
-function savePat() {
-  var val = document.getElementById('pat-input').value.trim();
-  if (!val) { showToast('❌ トークンを入力してください', 'err'); return; }
-  GH._pat = val;
-  localStorage.setItem('gh_pat', val);
-  closePatModal();
-  showToast('✅ トークンを保存しました。データを読み込みます...', 'ok');
-  ghLoad(true);
-}
-function openPatModal() {
-  var stored = ghPat();
-  document.getElementById('pat-input').value = stored || '';
-  document.getElementById('pat-modal').classList.add('open');
-}
-function closePatModal() {
-  document.getElementById('pat-modal').classList.remove('open');
+  if (!GH.pat) GH.pat = localStorage.getItem('gh_pat') || '';
+  return GH.pat;
 }
 
-// ── GitHub APIのベースURL ──
-function ghApiUrl(path) {
-  return 'https://api.github.com/repos/' + GH.owner + '/' + GH.repo + '/contents/' + path;
+function ghSetStat(msg, col) {
+  var el = document.getElementById('gh-stat');
+  if (el) { el.textContent = msg; el.style.color = col || 'var(--text-muted)'; }
+}
+
+function showToast(msg, type) {
+  var t = document.getElementById('io-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'io-toast ' + (type||'ok') + ' show';
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.classList.remove('show'); }, 5000);
+}
+
+function ghOpenConfig() {
+  var el = document.getElementById('gh-cfg-overlay');
+  if (el) {
+    document.getElementById('gh-pat-input').value = ghPat();
+    el.style.display = 'flex';
+  }
+}
+function ghCloseConfig() {
+  var el = document.getElementById('gh-cfg-overlay');
+  if (el) el.style.display = 'none';
+}
+function ghSavePat() {
+  var inp = document.getElementById('gh-pat-input');
+  if (!inp || !inp.value.trim()) { showToast('❌ トークンを入力してください', 'err'); return; }
+  GH.pat = inp.value.trim();
+  localStorage.setItem('gh_pat', GH.pat);
+  ghCloseConfig();
+  showToast('✅ トークン保存。データを読み込みます...', 'ok');
+  ghLoad();
+}
+
+function ghApiUrl() {
+  return 'https://api.github.com/repos/' + GH.owner + '/' + GH.repo + '/contents/' + GH.file;
 }
 function ghHeaders() {
   return {
@@ -1356,156 +1362,94 @@ function ghHeaders() {
   };
 }
 
-// ── データ自動読み込み（起動時） ──
-function ghLoad(showMsg) {
+// ── 自動読み込み ──
+function ghLoad() {
   var pat = ghPat();
   if (!pat) {
-    // PAT未設定 → 設定モーダルを表示
-    setTimeout(function() { openPatModal(); }, 500);
-    setStatus('⚠️ 初回設定が必要です（⚙ボタンをクリック）', 'var(--warn)');
+    ghSetStat('⚠️ ⚙ボタンで設定してください', 'var(--warn)');
+    setTimeout(ghOpenConfig, 800);
     return;
   }
-
-  setStatus('⏳ 読込中...', 'var(--text-muted)');
-
-  fetch(ghApiUrl(GH.dataFile), { headers: ghHeaders() })
+  ghSetStat('⏳ 読込中...', 'var(--text-muted)');
+  fetch(ghApiUrl(), { headers: ghHeaders() })
   .then(function(res) {
-    if (res.status === 404) {
-      // ファイルが存在しない → 空データで開始
-      setStatus('✅ 新規データで開始', 'var(--accent2)');
-      return null;
-    }
-    if (res.status === 401) {
-      setStatus('❌ 認証エラー', 'var(--danger)');
-      showToast('❌ GitHubトークンが無効です。⚙ボタンから再設定してください。', 'err');
-      return null;
-    }
-    if (!res.ok) {
-      setStatus('❌ 読込失敗', 'var(--danger)');
-      return null;
-    }
+    if (res.status === 401) { ghSetStat('❌ 認証エラー', 'var(--danger)'); showToast('❌ トークンが無効です。⚙ボタンで再設定してください', 'err'); return null; }
+    if (res.status === 404) { ghSetStat('✅ 新規データ', 'var(--accent2)'); return null; }
+    if (!res.ok) { ghSetStat('❌ 読込失敗', 'var(--danger)'); return null; }
     return res.json();
   })
   .then(function(file) {
     if (!file) return;
-    GH._sha = file.sha;
-    var text = atob(file.content.replace(/\n/g, ''));
-    // UTF-8デコード
-    var bytes = new Uint8Array(text.length);
-    for (var i=0; i<text.length; i++) bytes[i] = text.charCodeAt(i);
-    var decoded = new TextDecoder('utf-8').decode(bytes);
-    var data = JSON.parse(decoded);
-
-    if (!data.projects || !data.donors || !data.remittances) {
-      setStatus('❌ データ形式エラー', 'var(--danger)'); return;
-    }
+    GH.sha = file.sha;
+    var bin = atob(file.content.replace(/\n/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    var data = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    if (!data.projects || !data.donors || !data.remittances) { ghSetStat('❌ データ形式エラー', 'var(--danger)'); return; }
     if (data.fiscalYears && data.fiscalYears.length) fiscalYears = data.fiscalYears;
     projects    = data.projects;
     donors      = data.donors;
     remittances = data.remittances;
     if (fiscalYears.length) {
-      // 最新年度を選択
-      var maxYear = Math.max.apply(null, fiscalYears.map(function(f){ return f.year; }));
-      activeYear = maxYear;
+      activeYear = Math.max.apply(null, fiscalYears.map(function(f){ return f.year; }));
     }
     renderYearSW(); updateYearSelects(); renderAll();
-
-    var savedAt = data.savedAt ? new Date(data.savedAt).toLocaleString('ja-JP') : '';
-    setStatus('✅ ' + savedAt + ' 読込済', 'var(--accent2)');
-    if (showMsg) showToast('📂 GitHubから読み込みました（プロジェクト:' + data.projects.length + '件）', 'ok');
+    var ts = data.savedAt ? new Date(data.savedAt).toLocaleString('ja-JP') : '';
+    ghSetStat('✅ ' + ts, 'var(--accent2)');
+    showToast('📂 データを読み込みました（プロジェクト:' + data.projects.length + '件）', 'ok');
   })
   .catch(function(e) {
-    setStatus('❌ 接続エラー', 'var(--danger)');
-    showToast('❌ GitHub接続エラー: ' + e.message, 'err');
+    ghSetStat('❌ 接続エラー', 'var(--danger)');
+    showToast('❌ ' + e.message, 'err');
   });
 }
 
-// ── データ保存（GitHub API PUT） ──
+// ── 保存 ──
 function ghSave() {
-  var pat = ghPat();
-  if (!pat) { openPatModal(); return; }
-
-  var btn = document.getElementById('btn-gh-save');
-  var lbl = document.getElementById('gh-save-label');
+  if (!ghPat()) { ghOpenConfig(); return; }
+  var btn = document.getElementById('gh-save-btn');
   if (btn) btn.disabled = true;
-  if (lbl) lbl.textContent = '⏳ 保存中...';
+  ghSetStat('⏳ 保存中...', 'var(--text-muted)');
 
-  var payload = {
-    version:     '2.0',
-    savedAt:     new Date().toISOString(),
-    appVersion:  'NGO Ops v3.0',
-    fiscalYears: fiscalYears,
-    projects:    projects,
-    donors:      donors,
-    remittances: remittances,
-  };
-  var json    = JSON.stringify(payload, null, 2);
-  // UTF-8 → base64
-  var bytes   = new TextEncoder().encode(json);
-  var bin     = String.fromCharCode.apply(null, bytes);
-  var b64     = btoa(bin);
+  var payload = { version:'2.0', savedAt:new Date().toISOString(), appVersion:'NGO Ops v3.0',
+    fiscalYears:fiscalYears, projects:projects, donors:donors, remittances:remittances };
+  var json  = JSON.stringify(payload, null, 2);
+  var bytes = new TextEncoder().encode(json);
+  var bin   = String.fromCharCode.apply(null, bytes);
+  var b64   = btoa(bin);
 
-  var body = {
-    message: '💾 データ更新 ' + new Date().toLocaleString('ja-JP'),
-    content: b64,
-    branch:  GH.branch,
-  };
-  if (GH._sha) body.sha = GH._sha;
+  var body = { message:'💾 データ更新 ' + new Date().toLocaleString('ja-JP'), content: b64, branch: GH.branch };
+  if (GH.sha) body.sha = GH.sha;
 
-  fetch(ghApiUrl(GH.dataFile), {
-    method:  'PUT',
-    headers: ghHeaders(),
-    body:    JSON.stringify(body),
-  })
+  fetch(ghApiUrl(), { method:'PUT', headers: ghHeaders(), body: JSON.stringify(body) })
   .then(function(res) {
-    btn.disabled = false;
-    lbl.textContent = '☁️ 保存';
+    if (btn) btn.disabled = false;
     if (res.ok) {
       return res.json().then(function(j) {
-        if (j.content) GH._sha = j.content.sha;
-        var now = new Date();
-        var ts  = ('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
-        setStatus('✅ ' + ts + ' 保存済', 'var(--accent2)');
-        showToast('☁️ GitHubに保存しました（' + ts + '）', 'ok');
+        if (j.content) GH.sha = j.content.sha;
+        var ts = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
+        ghSetStat('✅ ' + ts + ' 保存済', 'var(--accent2)');
+        showToast('☁️ GitHubに保存しました', 'ok');
       });
     } else {
       return res.json().then(function(j) {
-        var msg = (j.message || JSON.stringify(j)).slice(0, 80);
-        setStatus('❌ 保存失敗', 'var(--danger)');
+        var msg = (j.message||'').slice(0,60);
+        ghSetStat('❌ 保存失敗', 'var(--danger)');
         showToast('❌ 保存失敗(' + res.status + '): ' + msg, 'err');
       });
     }
   })
   .catch(function(e) {
-    btn.disabled = false;
-    lbl.textContent = '☁️ 保存';
-    setStatus('❌ エラー', 'var(--danger)');
-    showToast('❌ 通信エラー: ' + e.message, 'err');
+    if (btn) btn.disabled = false;
+    ghSetStat('❌ エラー', 'var(--danger)');
+    showToast('❌ ' + e.message, 'err');
   });
 }
 
-// ── ステータス表示 ──
-function setStatus(msg, color) {
-  var el = document.getElementById('gh-status');
-  if (!el) return;
-  el.textContent = msg;
-  el.style.color = color || 'var(--text-muted)';
-}
-
-// ── トースト通知 ──
-function showToast(msg, type) {
-  var t = document.getElementById('io-toast');
-  t.textContent = msg;
-  t.className = 'io-toast ' + type + ' show';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function() { t.classList.remove('show'); }, 5000);
-}
-
-// 後方互換（旧ボタン名）
-function saveData()          { ghSave(); }
-function saveToFile()        { ghSave(); }
-function saveToSharePoint()  { ghSave(); }
-function loadFromSharePoint(){ ghLoad(true); }
+// 後方互換
+function saveData()         { ghSave(); }
+function saveToFile()       { ghSave(); }
+function saveToSharePoint() { ghSave(); }
 
 // ═══════════════════════════════════════════
 // INIT
@@ -1515,8 +1459,8 @@ renderYearSW();
 updateYearSelects();
 renderAll();
 
-// GitHub から自動読み込み
-ghLoad(false);
+document.addEventListener("DOMContentLoaded", function(){ ghLoad(); });
+if (document.readyState !== "loading") { setTimeout(ghLoad, 100); }
 
 // 検証実行（コンソールに結果を出力）
 const result = runVerification();
@@ -1530,30 +1474,24 @@ setTimeout(() => banner && banner.remove(), 8000);
 </script>
 <div class="io-toast" id="io-toast"></div>
 
-<!-- GitHub PAT設定モーダル -->
-<div class="pat-modal" id="pat-modal">
-  <div class="pat-box">
-    <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text)">⚙ GitHub設定</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:18px;">
-      GitHubにデータを保存するために、Personal Access Token（PAT）が必要です。<br>
-      入力した情報はこの端末のブラウザにのみ保存されます。
+<div id="gh-cfg-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:480px;width:90%;">
+    <div style="font-size:15px;font-weight:600;margin-bottom:8px;color:var(--text);">⚙ GitHub接続設定</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Personal Access Token（PAT）を入力してください。<br>この端末のブラウザにのみ保存されます。</div>
+    <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:4px;font-family:'DM Mono',monospace;">TOKEN *</label>
+    <input id="gh-pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+      style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;margin-bottom:8px;">
+    <div style="font-size:10px;color:var(--text-dim);margin-bottom:16px;">
+      GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)<br>
+      権限: <b style="color:var(--accent)">repo</b> にチェック
     </div>
-    <div style="margin-bottom:12px;">
-      <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:4px;font-family:'DM Mono',monospace;">PERSONAL ACCESS TOKEN *</label>
-      <input id="pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace;outline:none;">
-      <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">
-        GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)<br>
-        権限：<b style="color:var(--accent)">repo</b> にチェック
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
-      <button onclick="closePatModal()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;">キャンセル</button>
-      <button onclick="savePat()" style="background:var(--accent);color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;">保存して接続</button>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="ghCloseConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;">キャンセル</button>
+      <button onclick="ghSavePat()" style="background:var(--accent);color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;">保存して接続</button>
     </div>
   </div>
 </div>
-<div class="io-toast" id="io-toast"></div>
+<div id="io-toast" class="io-toast"></div>
 
 </body>
 </html>
