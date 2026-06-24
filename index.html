@@ -291,8 +291,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
         <span class="gh-status" id="gh-status"></span>
         <button class="btn-ghost btn-sm" onclick="openPatModal()" title="GitHub設定" style="padding:4px 8px;font-size:11px;">⚙</button>
       </div>
-      </div>
-    </div>>
+    </div>
+  </div>
   <div class="content">
 
     <!-- ─── DASHBOARD ─── -->
@@ -1427,8 +1427,8 @@ function ghSave() {
 
   var btn = document.getElementById('btn-gh-save');
   var lbl = document.getElementById('gh-save-label');
-  btn.disabled = true;
-  lbl.textContent = '⏳ 保存中...';
+  if (btn) btn.disabled = true;
+  if (lbl) lbl.textContent = '⏳ 保存中...';
 
   var payload = {
     version:     '2.0',
@@ -1487,6 +1487,7 @@ function ghSave() {
 // ── ステータス表示 ──
 function setStatus(msg, color) {
   var el = document.getElementById('gh-status');
+  if (!el) return;
   el.textContent = msg;
   el.style.color = color || 'var(--text-muted)';
 }
