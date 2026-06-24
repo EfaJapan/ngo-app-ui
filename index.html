@@ -4,50 +4,61 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>海外事業管理システム | NGO Operations v2</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=BIZ+UDPGothic:wght@400;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0f1117;--surface:#161b27;--surface2:#1e2535;--border:#2a3348;
-  --accent:#4f8ef7;--accent2:#38d9a9;--warn:#f77b4f;--danger:#f74f6a;
-  --text:#e8edf5;--text-muted:#7a8ba8;--text-dim:#4a5568;
-  --laos:#f7c94f;--cambodia:#f74f6a;--vietnam:#4ff7a0;
+  /* EFA Japan ブランドカラー */
+  --bg:#F2F7FC;          /* ライトブルー背景 */
+  --surface:#FFFFFF;     /* 白 */
+  --surface2:#E8F0F9;    /* 薄いブルーグレー */
+  --border:#C8D8EC;      /* 境界線 */
+  --accent:#005EAD;      /* EFAブルー（メイン） */
+  --accent2:#0078D4;     /* ミディアムブルー */
+  --warn:#C07A00;        /* 警告オレンジ（調整済み） */
+  --danger:#C00000;      /* 危険レッド */
+  --text:#1A3A5C;        /* ダークブルー（本文） */
+  --text-muted:#4A6A8A;  /* ミュートテキスト */
+  --text-dim:#7A9AB8;    /* 薄テキスト */
+  --laos:#005EAD;        /* ラオス（EFAブルー） */
+  --cambodia:#C00000;    /* カンボジア（レッド） */
+  --vietnam:#007A50;     /* ベトナム（グリーン） */
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+body{font-family:'BIZ UDPGothic','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
 
 /* ── SIDEBAR ── */
-.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);
+.sidebar{width:220px;min-height:100vh;background:#003A70;border-right:1px solid #002D56;
   display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
-.logo{padding:18px 20px 12px;border-bottom:1px solid var(--border);}
-.logo-title{font-family:'Playfair Display',serif;font-size:14px;color:var(--accent);line-height:1.35;}
-.logo-sub{font-size:9px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
+.logo{padding:18px 20px 12px;border-bottom:1px solid rgba(255,255,255,.15);}
+.logo-title{font-family:'Playfair Display',serif;font-size:14px;color:#FFFFFF;line-height:1.35;}
+.logo-sub{font-size:9px;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace;margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
 .nav{padding:8px 0;flex:1;overflow-y:auto;}
-.nav-section{padding:7px 20px 3px;font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.nav-section{padding:7px 20px 3px;font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:13px;
-  color:var(--text-muted);transition:all .15s;border-left:2px solid transparent;}
-.nav-item:hover{color:var(--text);background:var(--surface2);}
-.nav-item.active{color:var(--accent);background:rgba(79,142,247,.08);border-left-color:var(--accent);}
+  color:rgba(255,255,255,.75);transition:all .15s;border-left:2px solid transparent;}
+.nav-item:hover{color:#FFFFFF;background:rgba(255,255,255,.1);}
+.nav-item.active{color:#FFFFFF;background:rgba(255,255,255,.18);border-left-color:#FFFFFF;}
 .notif{display:inline-block;background:var(--danger);color:#fff;border-radius:10px;
   font-size:9px;padding:1px 5px;margin-left:4px;font-family:'DM Mono',monospace;vertical-align:middle;}
 /* year switcher */
-.ysw{padding:10px 14px;border-top:1px solid var(--border);}
-.ysw-lbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.ysw{padding:10px 14px;border-top:1px solid rgba(255,255,255,.15);}
+.ysw-lbl{font-size:9px;color:rgba(255,255,255,.4);font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
 .ysw-list{display:flex;flex-direction:column;gap:3px;}
 .ybtn{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-radius:5px;
   cursor:pointer;font-size:12px;font-family:'DM Mono',monospace;border:1px solid transparent;
-  transition:all .15s;color:var(--text-muted);}
-.ybtn:hover{background:var(--surface2);color:var(--text);}
-.ybtn.active{background:rgba(79,142,247,.12);border-color:rgba(79,142,247,.3);color:var(--accent);font-weight:600;}
-.ybtn-period{font-size:9px;color:var(--text-dim);}
-.ybtn.active .ybtn-period{color:rgba(79,142,247,.6);}
-.ymng-btn{width:100%;margin-top:5px;padding:4px;background:transparent;border:1px dashed var(--border);
-  border-radius:5px;color:var(--text-dim);font-size:10px;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;}
-.ymng-btn:hover{border-color:var(--accent);color:var(--accent);}
+  transition:all .15s;color:rgba(255,255,255,.7);}
+.ybtn:hover{background:rgba(255,255,255,.1);color:#FFFFFF;}
+.ybtn.active{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#FFFFFF;font-weight:600;}
+.ybtn-period{font-size:9px;color:rgba(255,255,255,.4);}
+.ybtn.active .ybtn-period{color:rgba(255,255,255,.6);}
+.ymng-btn{width:100%;margin-top:5px;padding:4px;background:transparent;border:1px dashed rgba(255,255,255,.3);
+  border-radius:5px;color:rgba(255,255,255,.5);font-size:10px;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;}
+.ymng-btn:hover{border-color:rgba(255,255,255,.7);color:#FFFFFF;}
 
 /* ── MAIN ── */
 .main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
-.topbar{padding:12px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;
-  justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:50;}
+.topbar{padding:12px 26px;border-bottom:1px solid #C8D8EC;display:flex;align-items:center;
+  justify-content:space-between;background:#FFFFFF;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,94,173,.08);}
 .page-title{font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px;}
 .topbar-r{display:flex;gap:10px;align-items:center;}
 .content{padding:22px 26px;flex:1;}
@@ -55,7 +66,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 /* ── BUTTONS ── */
 .btn{padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
   cursor:pointer;border:none;transition:all .15s;font-weight:500;}
-.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:#3a7de8;}
+.btn-primary{background:#005EAD;color:#fff;}.btn-primary:hover{background:#003A70;}
 .btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border);}
 .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
 .btn-sm{padding:4px 10px;font-size:11px;}
@@ -78,8 +89,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;
   padding:16px;position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.kpi-card.blue::before{background:var(--accent);}
-.kpi-card.green::before{background:var(--accent2);}
+.kpi-card.blue::before{background:#005EAD;}
+.kpi-card.green::before{background:#0078D4;}
 .kpi-card.orange::before{background:var(--warn);}
 .kpi-card.red::before{background:var(--danger);}
 .kpi-label{font-size:10px;color:var(--text-muted);margin-bottom:5px;font-family:'DM Mono',monospace;}
@@ -240,10 +251,10 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .io-toast.show{opacity:1;}
 .io-toast.ok{background:rgba(56,217,169,.92);}
 .io-toast.err{background:rgba(247,79,106,.92);}
-.gh-btn{background:rgba(56,217,169,.15);border:1px solid rgba(56,217,169,.35);color:var(--accent2);
+.gh-btn{background:#005EAD;border:1px solid #003A70;color:#FFFFFF;
   padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;
   cursor:pointer;font-weight:500;transition:all .15s;}
-.gh-btn:hover{background:rgba(56,217,169,.28);}
+.gh-btn:hover{background:#003A70;}
 .gh-btn:disabled{opacity:.5;cursor:not-allowed;}
 .gh-stat{font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 </style>
@@ -253,8 +264,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 <!-- ══════════════ SIDEBAR ══════════════ -->
 <nav class="sidebar">
   <div class="logo">
-    <div class="logo-title">海外事業<br>管理システム</div>
-    <div class="logo-sub">NGO Ops v3.0</div>
+    <div class="logo-title" style="font-family:'BIZ UDPGothic','Noto Sans JP',sans-serif;">海外事業<br>管理システム</div>
+    <div class="logo-sub" style="letter-spacing:1.5px;">EFA JAPAN | NGO Ops v3.0</div>
   </div>
   <div class="nav">
     <div class="nav-section">メイン</div>
@@ -1487,7 +1498,7 @@ setTimeout(() => banner && banner.remove(), 8000);
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="ghCloseConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;">キャンセル</button>
-      <button onclick="ghSavePat()" style="background:var(--accent);color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;">保存して接続</button>
+      <button onclick="ghSavePat()" style="background:#005EAD;color:white;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;">保存して接続</button>
     </div>
   </div>
 </div>
