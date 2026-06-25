@@ -504,7 +504,8 @@ body{font-family:'BIZ UDPGothic','Noto Sans JP',sans-serif;background:var(--bg);
         <div class="fg"><label class="flbl">目標調達額合計（円）*</label><input class="finput" id="pm-target" type="number" placeholder="例：20000000"></div>
         <div class="fg"><label class="flbl">ベース確定資金額（円）※ドナー採択分は自動加算</label><input class="finput" id="pm-conf" type="number" placeholder="例：12000000"></div>
       </div>
-      <div class="fhint">💡 不足額（目標調達額合計 − 確定資金額）と資金ステータスは自動計算されます</div>
+      <div class="fg"><label class="flbl">年間送金予算（円）※送金実施率の計算に使用</label><input class="finput" id="pm-remit-budget" type="number" placeholder="例：12000000"></div>
+      <div class="fhint">💡 不足額・資金ステータスは自動計算。送金実施率＝実績額÷年間送金予算×100</div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="CM('proj-modal')">キャンセル</button>
@@ -568,14 +569,15 @@ body{font-family:'BIZ UDPGothic','Noto Sans JP',sans-serif;background:var(--bg);
         <div class="fg"><label class="flbl">四半期 *</label><select class="fselect" id="rm-quarter"><option value="Q1">Q1（4〜6月）</option><option value="Q2">Q2（7〜9月）</option><option value="Q3">Q3（10〜12月）</option><option value="Q4">Q4（1〜3月）</option></select></div>
       </div>
       <div class="frow">
-        <div class="fg"><label class="flbl">計画送金額（円）</label><input class="finput" id="rm-planned" type="number" placeholder="例：3000000"></div>
         <div class="fg"><label class="flbl">実績送金額（円）</label><input class="finput" id="rm-actual" type="number" placeholder="未実施は空欄"></div>
+        <div class="fg"></div>
       </div>
+      <input type="hidden" id="rm-planned" value="0">
       <div class="frow">
         <div class="fg"><label class="flbl">送金日</label><input class="finput" id="rm-date" type="date"></div>
         <div class="fg"><label class="flbl">備考</label><input class="finput" id="rm-notes" placeholder="例：為替差益あり"></div>
       </div>
-      <div class="fhint">💡 国・年度・実施率はプロジェクト情報から自動取得されます</div>
+      <div class="fhint">💡 実施率＝実績額÷年間送金予算（プロジェクトに設定）×100　で自動計算されます</div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="CM('remit-modal')">キャンセル</button>
@@ -592,11 +594,11 @@ let fiscalYears = [{ id:'fy2025', year:2025, label:'', startMonth:4, endMonth:3 
 let activeYear = 2025;
 
 let projects = [
-  {id:'p1', name:'ラオス農村保健事業',    country:'ラオス',    year:2025, target:20000000, confirmed:12000000},
-  {id:'p2', name:'ラオス事務局管理費',    country:'ラオス',    year:2025, target:3000000,  confirmed:1800000},
-  {id:'p3', name:'カンボジア教育支援',    country:'カンボジア', year:2025, target:24000000, confirmed:16500000},
-  {id:'p4', name:'カンボジア管理費',      country:'カンボジア', year:2025, target:2000000,  confirmed:1200000},
-  {id:'p5', name:'ベトナム水衛生改善',    country:'ベトナム',  year:2025, target:28000000, confirmed:23000000},
+  {id:'p1', name:'ラオス農村保健事業',    country:'ラオス',    year:2025, target:20000000, confirmed:12000000, remitBudget:0},
+  {id:'p2', name:'ラオス事務局管理費',    country:'ラオス',    year:2025, target:3000000,  confirmed:1800000,  remitBudget:0},
+  {id:'p3', name:'カンボジア教育支援',    country:'カンボジア', year:2025, target:24000000, confirmed:16500000, remitBudget:0},
+  {id:'p4', name:'カンボジア管理費',      country:'カンボジア', year:2025, target:2000000,  confirmed:1200000,  remitBudget:0},
+  {id:'p5', name:'ベトナム水衛生改善',    country:'ベトナム',  year:2025, target:28000000, confirmed:23000000, remitBudget:0},
 ];
 
 let donors = [
@@ -647,7 +649,21 @@ const donorAdopted = p => donors
 const confirmedTotal = p => (p.confirmed||0) + donorAdopted(p);
 
 const shortage   = p => (p.target||0) - confirmedTotal(p);
-const execRate   = r => (r.planned > 0 && r.actual > 0) ? Math.round(r.actual/r.planned*100) : null;
+// 送金実施率: actual / プロジェクトのremitBudget × 100
+const execRate   = r => {
+  var p = getProjById(r.projId);
+  var budget = p ? (p.remitBudget || 0) : 0;
+  return (budget > 0 && r.actual > 0) ? Math.round(r.actual / budget * 100) : null;
+};
+// 累計実施率: 同プロジェクトの全四半期actual合計 / remitBudget × 100
+const cumExecRate = function(projId) {
+  var p = getProjById(projId);
+  var budget = p ? (p.remitBudget || 0) : 0;
+  if (budget <= 0) return null;
+  var total = remittances.filter(function(r){ return r.projId === projId; })
+                         .reduce(function(s,r){ return s + (r.actual||0); }, 0);
+  return total > 0 ? Math.round(total / budget * 100) : null;
+};
 const adoptRate  = d => (d.applied > 0 && d.adopted > 0) ? Math.round(d.adopted/d.applied*100) : null;
 const getProjById = id => projects.find(p => p.id === id);
 const activeProjs = () => projects.filter(p => p.year === activeYear);
@@ -715,16 +731,17 @@ function renderDashboard() {
 
   // 四半期送金バー
   const ar = activeRemits();
+  // 四半期別累計実施率（全プロジェクトactual合計 / 全プロジェクトremitBudget合計）
+  const totalBudget = activeProjs().reduce((s,p)=>s+(p.remitBudget||0),0);
   document.getElementById('d-remit-bars').innerHTML = QUARTERS.map(q => {
-    const qr   = ar.filter(r=>r.quarter===q);
+    const qr  = ar.filter(r=>r.quarter===q);
     if (!qr.length) return '';
-    const plan = qr.reduce((s,r)=>s+(r.planned||0),0);
-    const act  = qr.reduce((s,r)=>s+(r.actual||0),0);
-    const pct  = plan>0&&act>0 ? Math.min(Math.round(act/plan*100),100) : 0;
-    const col  = pct>=90?'var(--accent2)':pct>=60?'var(--accent)':pct>0?'var(--warn)':'var(--text-dim)';
+    const act = qr.reduce((s,r)=>s+(r.actual||0),0);
+    const pct = (totalBudget>0&&act>0) ? Math.min(Math.round(act/totalBudget*100),100) : 0;
+    const col = pct>=25?'var(--accent2)':pct>=10?'var(--accent)':pct>0?'var(--warn)':'var(--text-dim)';
     return `<div class="cbar">
-      <div class="cbar-hd"><span style="font-family:'DM Mono',monospace;font-size:11px">${Q_LABELS[q]}</span><span style="font-family:'DM Mono',monospace;font-size:12px;color:${col}">${pct>0?pct+'%':'未実施'}</span></div>
-      <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="cbar-hd"><span style="font-family:'DM Mono',monospace;font-size:11px">${Q_LABELS[q]}</span><span style="font-family:'DM Mono',monospace;font-size:12px;color:${col}">${pct>0?pct+'%（予算比）':'未実施'}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${Math.min(pct*4,100)}%;background:${col}"></div></div>
     </div>`;
   }).join('') || '<div class="empty-state">送金データなし</div>';
 }
@@ -881,26 +898,29 @@ function renderRemittances() {
             <span style="width:8px;height:8px;border-radius:50%;background:${cDotColor(c)};display:inline-block"></span>${c}
           </div>
           <div class="crsub-totals">
-            <span>計画: <b style="color:var(--accent)">${fmtYen(cPlan)}</b></span>
             <span>実績: <b style="color:${cAct>0?'var(--accent2)':'var(--text-dim)'}">${cAct>0?fmtYen(cAct):'未実施'}</b></span>
           </div>
         </div>
         <div class="table-wrap"><div class="table-scroll"><table class="data-table">
           <thead><tr>
             <th>プロジェクト・管理費名</th>
-            <th>計画送金額</th><th>実績送金額</th><th>送金日</th><th>実施率</th><th>備考</th><th>操作</th>
+            <th>年間送金予算</th><th>四半期実績</th><th>送金日</th>
+            <th>四半期実施率</th><th>累計実施率</th><th>備考</th><th>操作</th>
           </tr></thead>
           <tbody>
             ${cR.map(r => {
               const proj = getProjById(r.projId);
               const er   = execRate(r);
               const ec   = er!=null ? (er>=90?'var(--accent2)':er>=70?'var(--accent)':'var(--warn)') : 'var(--text-dim)';
+              var cum = cumExecRate(r.projId);
+              var cumCol = cum!=null?(cum>=90?'var(--accent2)':cum>=70?'var(--accent2)':'var(--warn)'):'var(--text-dim)';
               return `<tr>
-                <td>${proj ? proj.name : '—'}</td>
-                <td class="mono" style="font-size:11px;white-space:nowrap">${fmtYen(r.planned)}</td>
+                <td><b>${proj ? proj.name : '—'}</b></td>
+                <td class="mono" style="font-size:11px;white-space:nowrap;color:var(--accent)">${proj&&proj.remitBudget>0?fmtYen(proj.remitBudget):'<span style="color:var(--warn);font-size:10px">要設定</span>'}</td>
                 <td class="mono" style="font-size:11px;white-space:nowrap">${r.actual>0?fmtYen(r.actual):'<span style="color:var(--text-dim)">未実施</span>'}</td>
                 <td style="font-size:11px;color:var(--text-muted)">${r.date||'—'}</td>
                 <td>${er!=null?`<span class="computed" style="color:${ec}">${er}%</span>`:'<span style="color:var(--text-dim)">—</span>'}</td>
+                <td>${cum!=null?`<span class="computed" style="color:${cumCol}">${cum}%</span>`:'<span style="color:var(--text-dim)">—</span>'}</td>
                 <td style="font-size:11px;color:var(--text-muted)">${r.notes||''}</td>
                 <td><div class="action-btns">
                   <button class="btn-edit" onclick="openRemitEdit('${r.id}')">✏️</button>
@@ -918,9 +938,7 @@ function renderRemittances() {
       <div class="qgroup-header">
         <div class="qgroup-title">${Q_LABELS[q]}</div>
         <div class="qgroup-summary">
-          <div class="qsum"><div class="qsum-lbl">計画合計</div><div class="qsum-val" style="color:var(--accent)">${fmtYen(qPlan)}</div></div>
-          <div class="qsum"><div class="qsum-lbl">実績合計</div><div class="qsum-val" style="color:${qAct>0?'var(--accent2)':'var(--text-dim)'}">${qAct>0?fmtYen(qAct):'未実施'}</div></div>
-          <div class="qsum"><div class="qsum-lbl">実施率</div><div class="qsum-val" style="color:${rCol}">${qRate!=null?qRate+'%':'—'}</div></div>
+          <div class="qsum"><div class="qsum-lbl">四半期実績合計</div><div class="qsum-val" style="color:${qAct>0?'var(--accent2)':'var(--text-dim)'}">${qAct>0?fmtYen(qAct):'未実施'}</div></div>
         </div>
       </div>
       ${cBlocks || '<div style="color:var(--text-dim);font-size:12px;padding:8px">この四半期の送金データなし</div>'}
@@ -1031,7 +1049,7 @@ function populateProjSel(selId) {
 // ── Project CRUD ──
 function openProjAdd() {
   document.getElementById('pm-id').value = '';
-  ['pm-name','pm-target','pm-conf'].forEach(i=>document.getElementById(i).value='');
+  ['pm-name','pm-target','pm-conf','pm-remit-budget'].forEach(i=>{ var el=document.getElementById(i); if(el) el.value=''; });
   document.getElementById('pm-country').value = '';
   updateYearSelects();
   document.getElementById('pm-year').value = activeYear;
@@ -1045,8 +1063,9 @@ function openProjEdit(id) {
   document.getElementById('pm-country').value = p.country;
   updateYearSelects();
   document.getElementById('pm-year').value    = p.year;
-  document.getElementById('pm-target').value  = p.target||'';
-  document.getElementById('pm-conf').value    = p.confirmed||'';
+  document.getElementById('pm-target').value       = p.target||'';
+  document.getElementById('pm-conf').value         = p.confirmed||'';
+  var rb = document.getElementById('pm-remit-budget'); if(rb) rb.value = p.remitBudget||'';
   document.getElementById('proj-modal-title').textContent = '✏️ プロジェクト・管理費編集';
   document.getElementById('proj-modal').classList.add('open');
 }
@@ -1056,10 +1075,12 @@ function saveProject() {
   const country = document.getElementById('pm-country').value;
   const year    = parseInt(document.getElementById('pm-year').value);
   const target  = parseInt(document.getElementById('pm-target').value)||0;
-  const conf    = parseInt(document.getElementById('pm-conf').value)||0;
+  const conf        = parseInt(document.getElementById('pm-conf').value)||0;
+  var rbEl = document.getElementById('pm-remit-budget');
+  const remitBudget = rbEl ? (parseInt(rbEl.value)||0) : 0;
   if (!name||!country) { alert('名前と国を入力してください'); return; }
-  if (id) { Object.assign(projects.find(x=>x.id===id), {name,country,year,target,confirmed:conf}); }
-  else    { projects.push({id:'p'+Date.now(), name, country, year, target, confirmed:conf}); }
+  if (id) { Object.assign(projects.find(x=>x.id===id), {name,country,year,target,confirmed:conf,remitBudget}); }
+  else    { projects.push({id:'p'+Date.now(), name, country, year, target, confirmed:conf, remitBudget}); }
   CM('proj-modal'); renderAll();
 }
 function deleteProject(id) {
@@ -1398,7 +1419,8 @@ function ghLoad() {
     var data = JSON.parse(new TextDecoder('utf-8').decode(bytes));
     if (!data.projects || !data.donors || !data.remittances) { ghSetStat('❌ データ形式エラー', 'var(--danger)'); return; }
     if (data.fiscalYears && data.fiscalYears.length) fiscalYears = data.fiscalYears;
-    projects    = data.projects;
+    // remitBudgetが未設定の既存データに0をデフォルト補完
+    projects    = data.projects.map(function(p){ return Object.assign({remitBudget:0}, p); });
     donors      = data.donors;
     remittances = data.remittances;
     if (fiscalYears.length) {
